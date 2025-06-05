@@ -1,1 +1,2177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninja Shuriken Master 2.0</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #000;
+            color: white;
+        }
+        canvas {
+            display: block;
+            border: 3px solid red; /* Borda vermelha ao redor do mapa */
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+        }
+        #health-bar {
+            width: 200px;
+            height: 20px;
+            background-color: #333;
+            border: 2px solid #555;
+            margin-bottom: 5px;
+        }
+        #health-fill {
+            height: 100%;
+            width: 100%;
+            background-color: #ff0000;
+            transition: width 0.3s;
+        }
+        #xp-bar {
+            width: 200px;
+            height: 10px;
+            background-color: #333;
+            border: 2px solid #555;
+            margin-bottom: 5px;
+        }
+        #xp-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #00ff00;
+            transition: width 0.3s;
+        }
+        #wave-info {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        #score {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        #level {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        #powerups {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: none;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: auto;
+        }
+        .powerup-option {
+            padding: 8px;
+            margin: 5px;
+            background-color: #333;
+            border: 1px solid #555;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .powerup-option:hover {
+            background-color: #555;
+        }
+        #boss-health {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            height: 30px;
+            background-color: #333;
+            border: 3px solid #ff0000;
+            display: none;
+        }
+        #boss-health-fill {
+            height: 100%;
+            width: 100%;
+            background-color: #ff0000;
+            transition: width 0.3s;
+        }
+        #boss-name {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            font-size: 16px;
+            color: #fff;
+            text-shadow: 0 0 5px #ff0000;
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        #restart-btn {
+            padding: 10px 20px;
+            background-color: #ff3333;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        #restart-btn:hover {
+            background-color: #ff5555;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        #powerup-buttons {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 10px;
+        }
+        .powerup-btn {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff00;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .powerup-btn:hover {
+            background-color: rgba(0, 255, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui">
+        <div id="health-bar">
+            <div id="health-fill"></div>
+        </div>
+        <div id="xp-bar">
+            <div id="xp-fill"></div>
+        </div>
+        <div id="wave-info">Onda: 1</div>
+        <div id="score">Pontuação: 0</div>
+        <div id="level">Nível: 1</div>
+    </div>
+    
+    <div id="boss-health">
+        <div id="boss-name"></div>
+        <div id="boss-health-fill"></div>
+    </div>
+    
+    <div id="powerups">
+        <h3>Escolha um Poder!</h3>
+        <div id="powerup-options"></div>
+    </div>
+    
+    <div id="powerup-buttons">
+        <div class="powerup-btn" id="powerup-btn-1">1</div>
+        <div class="powerup-btn" id="powerup-btn-2">2</div>
+        <div class="powerup-btn" id="powerup-btn-3">3</div>
+    </div>
+    
+    <div id="game-over">
+        <h2>FIM DE JOGO</h2>
+        <p id="final-score">Pontuação: 0</p>
+        <p id="final-wave">Onda: 0</p>
+        <p id="final-level">Nível: 0</p>
+        <button id="restart-btn">Jogar Novamente</button>
+    </div>
+    
+    <div id="controls">
+        <p>WASD: Mover</p>
+        <p>Mouse: Mirar</p>
+        <p>Clique Esquerdo: Lançar Shuriken</p>
+        <p>1/2/3: Selecionar Poder</p>
+    </div>
 
+    <script>
+        // Configurações do jogo
+        const config = {
+            playerSpeed: 5,
+            playerHealth: 100,
+            shurikenSpeed: 10,
+            shurikenCooldown: 300,
+            enemySpawnRate: 2000,
+            waveDuration: 40000,
+            xpRequirements: [300, 500, 700, 1000, 1350, 1600, 2000, 2400, 2800, 3200, 3700]
+        };
+
+        // Estado do jogo
+        const gameState = {
+            canvas: null,
+            ctx: null,
+            lastTime: 0,
+            keys: {},
+            mouse: { x: 0, y: 0, isDown: false },
+            player: null,
+            shurikens: [],
+            enemies: [],
+            bosses: [],
+            particles: [],
+            explosionHitboxes: [], // Nova propriedade para hitboxes de explosão
+            wave: 1,
+            waveTimer: 0,
+            score: 0,
+            xp: 0,
+            xpToLevel: config.xpRequirements[0],
+            level: 1,
+            gameOver: false,
+            spawnTimer: 0,
+            shurikenTimer: 0,
+            activePowerups: [],
+            bossActive: false,
+            bossSpawned: false,
+            currentPowerups: [],
+            doubleShotChance: 0 // Chance de tiro extra
+        };
+
+        // Classes do jogo
+        class Player {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 20;
+                this.health = config.playerHealth;
+                this.maxHealth = config.playerHealth;
+                this.speed = config.playerSpeed;
+                this.angle = 0;
+            }
+
+            update(deltaTime) {
+                // Movimento
+                let moveX = 0;
+                let moveY = 0;
+
+                if (gameState.keys['KeyW']) moveY -= 1;
+                if (gameState.keys['KeyS']) moveY += 1;
+                if (gameState.keys['KeyA']) moveX -= 1;
+                if (gameState.keys['KeyD']) moveX += 1;
+
+                // Normalizar movimento diagonal
+                if (moveX !== 0 && moveY !== 0) {
+                    moveX *= 0.7071;
+                    moveY *= 0.7071;
+                }
+
+                this.x += moveX * this.speed;
+                this.y += moveY * this.speed;
+
+                // Limitar ao canvas (bordas)
+                const borderBuffer = 5;
+                this.x = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.width - this.radius - borderBuffer, this.x));
+                this.y = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.height - this.radius - borderBuffer, this.y));
+
+                // Calcular ângulo em relação ao mouse
+                this.angle = Math.atan2(gameState.mouse.y - this.y, gameState.mouse.x - this.x);
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                // Desenhar jogador (ninja)
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Máscara do ninja
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 0.8, 0, Math.PI);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                
+                // Olhos
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                
+                ctx.restore();
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                if (this.health <= 0) {
+                    if (gameState.secondWind && !gameState.usedSecondWind) {
+                        this.health = this.maxHealth * 0.5;
+                        gameState.usedSecondWind = true;
+                        createParticles(this.x, this.y, 30, '#0ff');
+                    } else {
+                        this.health = 0;
+                        gameState.gameOver = true;
+                    }
+                }
+            }
+        }
+
+        class Shuriken {
+            constructor(x, y, angle) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = config.shurikenSpeed;
+                this.radius = 8;
+                this.damage = 10;
+                this.lifetime = 2000;
+                this.piercing = false;
+                this.bounces = 0;
+                this.explosive = false;
+                this.electric = false;
+            }
+
+            update(deltaTime) {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.lifetime -= deltaTime;
+
+                // Verificar colisão com bordas
+                const borderBuffer = 5;
+                if (this.x < borderBuffer || this.x > gameState.canvas.width - borderBuffer || 
+                    this.y < borderBuffer || this.y > gameState.canvas.height - borderBuffer) {
+                    if (this.bounces > 0) {
+                        // Rebater
+                        if (this.x < borderBuffer || this.x > gameState.canvas.width - borderBuffer) {
+                            this.angle = Math.PI - this.angle;
+                        } else {
+                            this.angle = -this.angle;
+                        }
+                        this.bounces--;
+                    } else {
+                        this.lifetime = 0;
+                    }
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle + Math.PI/4);
+                
+                // Desenhar shuriken com cor baseada no tipo
+                let fillColor = '#fff';
+                let strokeColor = '#f00';
+                
+                if (this.explosive) {
+                    fillColor = '#f80';
+                    strokeColor = '#f00';
+                } else if (this.electric) {
+                    fillColor = '#0ff';
+                    strokeColor = '#00f';
+                }
+                
+                ctx.beginPath();
+                ctx.moveTo(0, -this.radius);
+                ctx.lineTo(this.radius, 0);
+                ctx.lineTo(0, this.radius);
+                ctx.lineTo(-this.radius, 0);
+                ctx.closePath();
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+        }
+
+        // Hitbox de explosão para inimigos
+        class ExplosionHitbox {
+            constructor(x, y, radius) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+            }
+        }
+
+        class Enemy {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.radius = 15;
+                this.speed = 1;
+                this.health = 30;
+                this.maxHealth = 30;
+                this.damage = 5;
+                this.color = '#f00';
+                this.xpValue = 50;
+                this.attackCooldown = 1000;
+                this.lastAttack = 0;
+                this.specialAbilityCooldown = 5000;
+                this.lastSpecialAbility = 0;
+                this.isElite = false;
+                this.isBoss = false;
+                this.slowed = false;
+                this.slowAmount = 0;
+                this.slowTimer = 0;
+                this.originalSpeed = this.speed;
+                
+                // Criar hitbox de explosão
+                this.explosionHitbox = new ExplosionHitbox(this.x, this.y, this.radius * 1.5);
+                gameState.explosionHitboxes.push(this.explosionHitbox);
+                
+                // Configurações por tipo
+                switch(type) {
+                    case 'weak':
+                        this.radius = 12;
+                        this.speed = 1.5;
+                        this.health = 20;
+                        this.maxHealth = 20;
+                        this.damage = 3;
+                        this.color = '#f88';
+                        this.xpValue = 50;
+                        break;
+                    case 'medium':
+                        this.radius = 15;
+                        this.speed = 1.2;
+                        this.health = 40;
+                        this.maxHealth = 40;
+                        this.damage = 7;
+                        this.color = '#f55';
+                        this.xpValue = 80;
+                        break;
+                    case 'strong':
+                        this.radius = 18;
+                        this.speed = 1.0;
+                        this.health = 60;
+                        this.maxHealth = 60;
+                        this.damage = 10;
+                        this.color = '#f00';
+                        this.xpValue = 110;
+                        break;
+                    case 'elite':
+                        this.radius = 22;
+                        this.speed = 1.3;
+                        this.health = 100;
+                        this.maxHealth = 100;
+                        this.damage = 15;
+                        this.color = '#c00';
+                        this.xpValue = 160;
+                        this.isElite = true;
+                        this.specialAbilityCooldown = 4000;
+                        break;
+                    case 'tank':
+                        this.radius = 25;
+                        this.speed = 0.7;
+                        this.health = 150;
+                        this.maxHealth = 150;
+                        this.damage = 12;
+                        this.color = '#880';
+                        this.xpValue = 200;
+                        this.isElite = true;
+                        break;
+                    case 'assassin':
+                        this.radius = 10;
+                        this.speed = 2.0;
+                        this.health = 40;
+                        this.maxHealth = 40;
+                        this.damage = 20;
+                        this.color = '#808';
+                        this.xpValue = 180;
+                        this.isElite = true;
+                        break;
+                }
+            }
+
+            update(deltaTime) {
+                // Atualizar posição da hitbox de explosão
+                this.explosionHitbox.x = this.x;
+                this.explosionHitbox.y = this.y;
+                
+                // Atualizar timer de slow
+                if (this.slowed) {
+                    this.slowTimer += deltaTime;
+                    if (this.slowTimer >= 3000) {
+                        this.slowed = false;
+                        this.speed = this.originalSpeed;
+                        this.color = this.type === 'weak' ? '#f88' : 
+                                     this.type === 'medium' ? '#f55' : 
+                                     this.type === 'strong' ? '#f00' : '#c00';
+                    }
+                }
+                
+                // Mover em direção ao jogador
+                const dx = gameState.player.x - this.x;
+                const dy = gameState.player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 0) {
+                    this.x += (dx / dist) * this.speed;
+                    this.y += (dy / dist) * this.speed;
+                }
+                
+                // Verificar colisão com o jogador
+                if (dist < this.radius + gameState.player.radius) {
+                    this.lastAttack += deltaTime;
+                    if (this.lastAttack >= this.attackCooldown) {
+                        gameState.player.takeDamage(this.damage);
+                        this.lastAttack = 0;
+                    }
+                }
+                
+                // Habilidades especiais para inimigos elite
+                if (this.isElite && !this.isBoss) {
+                    this.lastSpecialAbility += deltaTime;
+                    if (this.lastSpecialAbility >= this.specialAbilityCooldown) {
+                        this.useSpecialAbility();
+                        this.lastSpecialAbility = 0;
+                    }
+                }
+            }
+
+            useSpecialAbility() {
+                switch(this.type) {
+                    case 'elite':
+                        // Cria um campo de força que reduz dano temporariamente
+                        this.color = '#0ff';
+                        this.damage *= 1.5;
+                        setTimeout(() => {
+                            this.color = '#c00';
+                            this.damage = 15;
+                        }, 3000);
+                        break;
+                        
+                    case 'tank':
+                        // Cura uma parte da vida
+                        this.health = Math.min(this.maxHealth, this.health + this.maxHealth * 0.3);
+                        createParticles(this.x, this.y, 15, '#0f0');
+                        break;
+                        
+                    case 'assassin':
+                        // Teleporta atrás do jogador
+                        const angle = Math.atan2(
+                            gameState.player.y - this.y,
+                            gameState.player.x - this.x
+                        );
+                        this.x = gameState.player.x - Math.cos(angle) * 100;
+                        this.y = gameState.player.y - Math.sin(angle) * 100;
+                        createParticles(this.x, this.y, 10, '#f0f');
+                        break;
+                }
+            }
+
+            applySlow(amount) {
+                if (this.isBoss) return; // Bosses são imunes ao slow
+                
+                this.slowTimer = 0; // Resetar timer
+                this.slowAmount = Math.min(0.45, this.slowAmount + amount); // Limite de 45% de slow
+                this.speed = this.originalSpeed * (1 - this.slowAmount);
+                this.color = '#00f';
+                this.slowed = true;
+            }
+
+            draw(ctx) {
+                // Corpo
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // Detalhes baseados no tipo
+                if (this.type === 'assassin') {
+                    // Olhos de assassino
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - this.radius * 0.6, this.y - this.radius * 0.3);
+                    ctx.lineTo(this.x - this.radius * 0.3, this.y - this.radius * 0.4);
+                    ctx.lineTo(this.x - this.radius * 0.4, this.y - this.radius * 0.2);
+                    ctx.closePath();
+                    
+                    ctx.moveTo(this.x + this.radius * 0.6, this.y - this.radius * 0.3);
+                    ctx.lineTo(this.x + this.radius * 0.3, this.y - this.radius * 0.4);
+                    ctx.lineTo(this.x + this.radius * 0.4, this.y - this.radius * 0.2);
+                    ctx.closePath();
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                } else {
+                    // Olhos padrão
+                    ctx.beginPath();
+                    ctx.arc(this.x - this.radius * 0.4, this.y - this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
+                    ctx.arc(this.x + this.radius * 0.4, this.y - this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                }
+                
+                // Boca
+                ctx.beginPath();
+                if (this.type === 'tank') {
+                    ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.4, 0.1, Math.PI - 0.1);
+                } else {
+                    ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.3, 0, Math.PI);
+                }
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                
+                // Barra de vida
+                if (this.health < this.maxHealth) {
+                    const healthPercent = this.health / this.maxHealth;
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(this.x - this.radius, this.y - this.radius - 10, this.radius * 2 * healthPercent, 3);
+                }
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                return this.health <= 0;
+            }
+        }
+
+        class Boss extends Enemy {
+            constructor(type) {
+                super(0, 0, 'strong'); // Posição será definida depois
+                this.type = type;
+                this.radius = 40;
+                this.speed = 1;
+                this.health = 500;
+                this.maxHealth = 500;
+                this.damage = 20;
+                this.color = '#800';
+                this.xpValue = 550;
+                this.attackCooldown = 2000;
+                this.lastAttack = 0;
+                this.phase = 1;
+                this.abilityCooldown = 5000;
+                this.lastAbility = 0;
+                this.name = "Boss";
+                this.isBoss = true;
+                this.fireBreathCooldown = 8000; // 8 segundos para o dragão
+                this.lastFireBreath = 0;
+                
+                // Configurações por tipo de boss
+                switch(type) {
+                    case 'dragon':
+                        this.health = 600;
+                        this.maxHealth = 600;
+                        this.speed = 1.2;
+                        this.damage = 25;
+                        this.color = '#f80';
+                        this.name = "Dragão Ninja";
+                        break;
+                    case 'oni':
+                        this.health = 800;
+                        this.maxHealth = 800;
+                        this.speed = 0.8;
+                        this.damage = 30;
+                        this.color = '#f0f';
+                        this.name = "Guerreiro Oni";
+                        break;
+                    case 'shadow':
+                        this.health = 700;
+                        this.maxHealth = 700;
+                        this.speed = 1.5;
+                        this.damage = 20;
+                        this.color = '#08f';
+                        this.name = "Mestre das Sombras";
+                        break;
+                    case 'thunder':
+                        this.health = 750;
+                        this.maxHealth = 750;
+                        this.speed = 1.8; // Mais rápido que os outros
+                        this.damage = 35;
+                        this.color = '#ff0';
+                        this.name = "Deus do Trovão";
+                        break;
+                }
+                
+                // Posição inicial aleatória nas bordas
+                const side = Math.floor(Math.random() * 4);
+                switch(side) {
+                    case 0: // Topo
+                        this.x = Math.random() * gameState.canvas.width;
+                        this.y = -this.radius;
+                        break;
+                    case 1: // Direita
+                        this.x = gameState.canvas.width + this.radius;
+                        this.y = Math.random() * gameState.canvas.height;
+                        break;
+                    case 2: // Baixo
+                        this.x = Math.random() * gameState.canvas.width;
+                        this.y = gameState.canvas.height + this.radius;
+                        break;
+                    case 3: // Esquerda
+                        this.x = -this.radius;
+                        this.y = Math.random() * gameState.canvas.height;
+                        break;
+                }
+            }
+
+            update(deltaTime) {
+                super.update(deltaTime);
+                
+                // Habilidades especiais
+                this.lastAbility += deltaTime;
+                if (this.lastAbility >= this.abilityCooldown) {
+                    this.useSpecialAbility();
+                    this.lastAbility = 0;
+                }
+                
+                // Labaredas de fogo do dragão
+                if (this.type === 'dragon') {
+                    this.lastFireBreath += deltaTime;
+                    if (this.lastFireBreath >= this.fireBreathCooldown) {
+                        this.useFireBreath();
+                        this.lastFireBreath = 0;
+                    }
+                }
+                
+                // Verificar mudança de fase
+                if (this.health <= this.maxHealth * 0.5 && this.phase === 1) {
+                    this.phase = 2;
+                    this.enterPhase2();
+                }
+            }
+
+            useSpecialAbility() {
+                switch(this.type) {
+                    case 'dragon':
+                        // Lança fogo em cone
+                        for (let i = -2; i <= 2; i++) {
+                            const angle = Math.atan2(
+                                gameState.player.y - this.y,
+                                gameState.player.x - this.x
+                            ) + i * 0.3;
+                            
+                            const fireball = new Enemy(
+                                this.x + Math.cos(angle) * this.radius,
+                                this.y + Math.sin(angle) * this.radius,
+                                'weak'
+                            );
+                            fireball.speed = 3;
+                            fireball.damage = 15;
+                            fireball.color = '#f80';
+                            fireball.radius = 10;
+                            fireball.xpValue = 0;
+                            
+                            gameState.enemies.push(fireball);
+                        }
+                        break;
+                        
+                    case 'oni':
+                        // Teleporta e deixa rastro de fogo
+                        this.x = Math.random() * gameState.canvas.width;
+                        this.y = Math.random() * gameState.canvas.height;
+                        
+                        // Criar círculo de fogo
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (i / 8) * Math.PI * 2;
+                            const fire = new Enemy(
+                                this.x + Math.cos(angle) * 100,
+                                this.y + Math.sin(angle) * 100,
+                                'weak'
+                            );
+                            fire.speed = 0;
+                            fire.damage = 10;
+                            fire.color = '#f0f';
+                            fire.radius = 15;
+                            fire.xpValue = 0;
+                            fire.lifetime = 3000;
+                            
+                            gameState.enemies.push(fire);
+                        }
+                        break;
+                        
+                    case 'shadow':
+                        // Cria clones
+                        for (let i = 0; i < 2; i++) {
+                            const clone = new Enemy(
+                                this.x + (Math.random() - 0.5) * 100,
+                                this.y + (Math.random() - 0.5) * 100,
+                                'strong'
+                            );
+                            clone.color = '#08f';
+                            clone.speed = this.speed * 1.2;
+                            clone.xpValue = 0;
+                            clone.lifetime = 5000;
+                            
+                            gameState.enemies.push(clone);
+                        }
+                        break;
+                        
+                    case 'thunder':
+                        // Raios que atingem aleatoriamente
+                        for (let i = 0; i < 3; i++) {
+                            const targetX = gameState.player.x + (Math.random() - 0.5) * 200;
+                            const targetY = gameState.player.y + (Math.random() - 0.5) * 200;
+                            createLightning(this.x, this.y, targetX, targetY);
+                            
+                            // Verificar se atingiu o jogador
+                            const distToPlayer = Math.sqrt(
+                                Math.pow(gameState.player.x - targetX, 2) + 
+                                Math.pow(gameState.player.y - targetY, 2)
+                            );
+                            if (distToPlayer < 60) {
+                                gameState.player.takeDamage(40); // Dano alto do raio
+                            }
+                            
+                            // Dano em área no alvo
+                            for (let j = gameState.enemies.length - 1; j >= 0; j--) {
+                                const enemy = gameState.enemies[j];
+                                const dist = Math.sqrt(
+                                    Math.pow(enemy.x - targetX, 2) + 
+                                    Math.pow(enemy.y - targetY, 2)
+                                );
+                                if (dist < 60) {
+                                    enemy.takeDamage(15);
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+
+            useFireBreath() {
+                // Labaredas de fogo em cone mais amplo
+                for (let i = -3; i <= 3; i++) {
+                    const angle = Math.atan2(
+                        gameState.player.y - this.y,
+                        gameState.player.x - this.x
+                    ) + i * 0.4;
+                    
+                    const fireball = new Enemy(
+                        this.x + Math.cos(angle) * this.radius,
+                        this.y + Math.sin(angle) * this.radius,
+                        'weak'
+                    );
+                    fireball.speed = 3.5;
+                    fireball.damage = 20;
+                    fireball.color = '#f50';
+                    fireball.radius = 12;
+                    fireball.xpValue = 0;
+                    
+                    gameState.enemies.push(fireball);
+                }
+            }
+
+            enterPhase2() {
+                switch(this.type) {
+                    case 'dragon':
+                        this.speed *= 1.5;
+                        this.abilityCooldown = 3000;
+                        this.fireBreathCooldown = 6000; // Labaredas mais frequentes
+                        break;
+                    case 'oni':
+                        this.damage *= 1.5;
+                        this.abilityCooldown = 4000;
+                        break;
+                    case 'shadow':
+                        this.speed *= 1.2;
+                        this.abilityCooldown = 3000;
+                        break;
+                    case 'thunder':
+                        this.abilityCooldown = 2000;
+                        break;
+                }
+            }
+
+            draw(ctx) {
+                // Corpo
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // Detalhes
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.9, 0, Math.PI * 2);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Olhos
+                ctx.beginPath();
+                if (this.phase === 1) {
+                    ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.15, 0, Math.PI * 2);
+                    ctx.arc(this.x + this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.15, 0, Math.PI * 2);
+                } else {
+                    // Fase 2 - olhos mais agressivos
+                    ctx.moveTo(this.x - this.radius * 0.4, this.y - this.radius * 0.2);
+                    ctx.lineTo(this.x - this.radius * 0.2, this.y - this.radius * 0.3);
+                    ctx.lineTo(this.x - this.radius * 0.3, this.y - this.radius * 0.1);
+                    ctx.closePath();
+                    
+                    ctx.moveTo(this.x + this.radius * 0.4, this.y - this.radius * 0.2);
+                    ctx.lineTo(this.x + this.radius * 0.2, this.y - this.radius * 0.3);
+                    ctx.lineTo(this.x + this.radius * 0.3, this.y - this.radius * 0.1);
+                    ctx.closePath();
+                }
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                
+                // Boca
+                ctx.beginPath();
+                if (this.phase === 1) {
+                    ctx.arc(this.x, this.y + this.radius * 0.1, this.radius * 0.3, 0, Math.PI);
+                } else {
+                    // Fase 2 - boca aberta
+                    ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.4, 0.1, Math.PI - 0.1);
+                }
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                
+                // Efeito especial para o Thunder God
+                if (this.type === 'thunder' && this.phase === 2) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#ff0';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                if (this.health <= 0) {
+                    gameState.bossActive = false;
+                    gameState.score += this.xpValue;
+                    gameState.xp += this.xpValue;
+                    
+                    // Reativar spawn de inimigos após derrotar o boss
+                    gameState.bossSpawned = false;
+                    gameState.spawnTimer = 0;
+                    
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color, size, velocity, lifetime) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = size;
+                this.velocity = velocity;
+                this.lifetime = lifetime;
+                this.maxLifetime = lifetime;
+            }
+
+            update(deltaTime) {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.lifetime -= deltaTime;
+            }
+
+            draw(ctx) {
+                const alpha = this.lifetime / this.maxLifetime;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // Power Ups por nível (até o nível 11)
+        const powerupsByLevel = [
+            null, // Nível 0 (inexistente)
+            
+            // Nível 1
+            [
+                {
+                    name: "Velocidade da Shuriken",
+                    description: "Shurikens se movem 30% mais rápido",
+                    apply: () => {
+                        config.shurikenSpeed *= 1.3;
+                    }
+                },
+                {
+                    name: "Tiro Duplo",
+                    description: "25% de chance de lançar uma shuriken extra",
+                    apply: () => {
+                        gameState.doubleShotChance = 0.25;
+                    }
+                },
+                {
+                    name: "Aumento de Vida",
+                    description: "Aumenta vida máxima em 50%",
+                    apply: () => {
+                        gameState.player.maxHealth *= 1.5;
+                        gameState.player.health *= 1.5;
+                    }
+                }
+            ],
+            
+            // Nível 2
+            [
+                {
+                    name: "Shurikens de Fogo",
+                    description: "Shurikens queimam inimigos causando 1/3 do dano por segundo",
+                    apply: () => {
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            const died = originalTakeDamage.call(this, amount);
+                            if (!died && !this.isBoss) {
+                                this.burn = { damage: amount * 0.33, duration: 3000, timer: 0 };
+                            }
+                            return died;
+                        };
+                    }
+                },
+                {
+                    name: "Shurikens de Gelo",
+                    description: "Shurikens reduzem velocidade dos inimigos em 5% por acerto (máx 45%). Efeito dura 3s sem novos acertos",
+                    apply: () => {
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            const died = originalTakeDamage.call(this, amount);
+                            if (!died && !this.isBoss) {
+                                this.applySlow(0.05);
+                            }
+                            return died;
+                        };
+                    }
+                },
+                {
+                    name: "Shurikens Elétricas",
+                    description: "Shurikens saltam para 2 inimigos próximos (50% de dano)",
+                    apply: () => {
+                        Shuriken.prototype.electric = true;
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            const died = originalTakeDamage.call(this, amount);
+                            if (died && !this.isBoss) {
+                                let targets = [];
+                                for (const enemy of gameState.enemies) {
+                                    if (enemy !== this) {
+                                        const dist = Math.sqrt(
+                                            Math.pow(enemy.x - this.x, 2) + 
+                                            Math.pow(enemy.y - this.y, 2)
+                                        );
+                                        if (dist < 150) {
+                                            targets.push({ enemy, dist });
+                                        }
+                                    }
+                                }
+                                // Ordenar por distância e pegar os 2 mais próximos
+                                targets.sort((a, b) => a.dist - b.dist);
+                                targets = targets.slice(0, 2);
+                                
+                                for (const target of targets) {
+                                    createLightning(this.x, this.y, target.enemy.x, target.enemy.y);
+                                    target.enemy.takeDamage(amount * 0.5);
+                                }
+                            }
+                            return died;
+                        };
+                    }
+                }
+            ],
+            
+            // Nível 3
+            [
+                {
+                    name: "Shurikens Explosivas",
+                    description: "Shurikens explodem ao atingir inimigos (dano em área)",
+                    apply: () => {
+                        Shuriken.prototype.explosive = true;
+                        const originalUpdate = Shuriken.prototype.update;
+                        Shuriken.prototype.update = function(deltaTime) {
+                            const hit = originalUpdate.call(this, deltaTime);
+                            
+                            // Verificar colisão com hitboxes de explosão
+                            for (const hitbox of gameState.explosionHitboxes) {
+                                const dx = this.x - hitbox.x;
+                                const dy = this.y - hitbox.y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                
+                                if (dist < hitbox.radius) {
+                                    createExplosion(this.x, this.y, 50, this.damage * 0.8);
+                                    this.lifetime = 0;
+                                    break;
+                                }
+                            }
+                            
+                            if (this.lifetime <= 0) {
+                                createExplosion(this.x, this.y, 50, this.damage * 0.8);
+                            }
+                            return hit;
+                        };
+                    }
+                },
+                {
+                    name: "Dash do Vento",
+                    description: "Move 30% mais rápido",
+                    apply: () => {
+                        gameState.player.speed *= 1.3;
+                    }
+                },
+                {
+                    name: "Arremesso Ninja",
+                    description: "Ganha velocidade de ataque ao matar inimigos",
+                    apply: () => {
+                        gameState.ninjaDash = true;
+                    }
+                }
+            ],
+            
+            // Nível 4
+            [
+                {
+                    name: "Shurikens Perfurantes",
+                    description: "Shurikens podem acertar múltiplos inimigos",
+                    apply: () => {
+                        Shuriken.prototype.piercing = true;
+                    }
+                },
+                {
+                    name: "Shurikens Quicantes",
+                    description: "Shurikens quicam nas bordas 3 vezes",
+                    apply: () => {
+                        Shuriken.prototype.bounces = 3;
+                    }
+                },
+                {
+                    name: "Tiro Rápido",
+                    description: "Reduz tempo entre shurikens em 30%",
+                    apply: () => {
+                        config.shurikenCooldown *= 0.7;
+                    }
+                }
+            ],
+            
+            // Nível 5
+            [
+                {
+                    name: "Tiro Triplo",
+                    description: "Lança 3 shurikens de uma vez",
+                    apply: () => {
+                        const originalThrowShuriken = throwShuriken;
+                        throwShuriken = (x, y, angle) => {
+                            originalThrowShuriken(x, y, angle - 0.2);
+                            originalThrowShuriken(x, y, angle);
+                            originalThrowShuriken(x, y, angle + 0.2);
+                        };
+                    }
+                },
+                {
+                    name: "Regeneração de Vida",
+                    description: "Regenera 1% de vida por segundo",
+                    apply: () => {
+                        gameState.healthRegen = true;
+                    }
+                },
+                {
+                    name: "Golpes Críticos",
+                    description: "20% de chance de causar dano duplo",
+                    apply: () => {
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            if (Math.random() < 0.2) {
+                                amount *= 2;
+                                createParticles(this.x, this.y, 10, '#ff0');
+                            }
+                            return originalTakeDamage.call(this, amount);
+                        };
+                    }
+                }
+            ],
+            
+            // Nível 6
+            [
+                {
+                    name: "Shurikens Vampíricas",
+                    description: "Cura 10% do dano causado",
+                    apply: () => {
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            const died = originalTakeDamage.call(this, amount);
+                            gameState.player.health = Math.min(
+                                gameState.player.maxHealth,
+                                gameState.player.health + amount * 0.1
+                            );
+                            return died;
+                        };
+                    }
+                },
+                {
+                    name: "Tempo Lento",
+                    description: "Inimigos ficam mais lentos quando sua vida está baixa",
+                    apply: () => {
+                        gameState.timeSlow = true;
+                    }
+                },
+                {
+                    name: "Último Esforço",
+                    description: "Dano dobrado quando vida está abaixo de 20%",
+                    apply: () => {
+                        gameState.finalGambit = true;
+                    }
+                }
+            ],
+            
+            // Nível 7
+            [
+                {
+                    name: "Tempestade de Shurikens",
+                    description: "Chance de lançar shurikens extras",
+                    apply: () => {
+                        const originalThrowShuriken = throwShuriken;
+                        throwShuriken = (x, y, angle) => {
+                            originalThrowShuriken(x, y, angle);
+                            if (Math.random() < 0.3) {
+                                for (let i = 0; i < 3; i++) {
+                                    setTimeout(() => {
+                                        originalThrowShuriken(
+                                            x + (Math.random() - 0.5) * 20,
+                                            y + (Math.random() - 0.5) * 20,
+                                            angle + (Math.random() - 0.5) * 0.5
+                                        );
+                                    }, i * 100);
+                                }
+                            }
+                        };
+                    }
+                },
+                {
+                    name: "Clone das Sombras",
+                    description: "30% de chance de evitar dano",
+                    apply: () => {
+                        const originalTakeDamage = Player.prototype.takeDamage;
+                        Player.prototype.takeDamage = function(amount) {
+                            if (Math.random() < 0.3) {
+                                createParticles(this.x, this.y, 10, '#888');
+                                return;
+                            }
+                            originalTakeDamage.call(this, amount);
+                        };
+                    }
+                },
+                {
+                    name: "Fúria do Dragão",
+                    description: "Todas as shurikens ganham efeito de fogo",
+                    apply: () => {
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            const died = originalTakeDamage.call(this, amount);
+                            if (!died && !this.isBoss) {
+                                this.burn = { damage: amount * 0.3, duration: 3000, timer: 0 };
+                            }
+                            return died;
+                        };
+                    }
+                }
+            ],
+            
+            // Nível 8
+            [
+                {
+                    name: "Shurikens Venenosas",
+                    description: "Inimigos sofrem dano ao longo do tempo",
+                    apply: () => {
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            const died = originalTakeDamage.call(this, amount);
+                            if (!died && !this.isBoss) {
+                                this.poison = { damage: amount * 0.1, duration: 5000, timer: 0 };
+                                this.color = '#0f0';
+                            }
+                            return died;
+                        };
+                    }
+                },
+                {
+                    name: "Shurikens Ricochete",
+                    description: "Shurikens quicam entre inimigos",
+                    apply: () => {
+                        Shuriken.prototype.bounces = 5;
+                        Shuriken.prototype.piercing = true;
+                    }
+                },
+                {
+                    name: "Reflexos Ninja",
+                    description: "Desvia de projéteis automaticamente",
+                    apply: () => {
+                        gameState.dodgeChance = 0.4;
+                    }
+                }
+            ],
+            
+            // Nível 9
+            [
+                {
+                    name: "Passo das Sombras",
+                    description: "Teleporta curtas distâncias ao matar inimigos",
+                    apply: () => {
+                        gameState.shadowStep = true;
+                    }
+                },
+                {
+                    name: "Sede de Sangue",
+                    description: "Ganha velocidade de ataque ao matar inimigos",
+                    apply: () => {
+                        gameState.bloodlust = true;
+                    }
+                },
+                {
+                    name: "Nuvem Tóxica",
+                    description: "Cria nuvem de veneno ao matar inimigos",
+                    apply: () => {
+                        gameState.toxicCloud = true;
+                    }
+                }
+            ],
+            
+            // Nível 10
+            [
+                {
+                    name: "Corte Onipotente",
+                    description: "Ocasionalmente lança uma rajada de shurikens",
+                    apply: () => {
+                        gameState.omnislash = true;
+                    }
+                },
+                {
+                    name: "Segundo Fôlego",
+                    description: "Revive uma vez com 50% de vida ao morrer",
+                    apply: () => {
+                        gameState.secondWind = true;
+                        gameState.usedSecondWind = false;
+                    }
+                },
+                {
+                    name: "Aposta Final",
+                    description: "Triplo de dano quando vida está abaixo de 20%",
+                    apply: () => {
+                        gameState.finalGambit = true;
+                    }
+                }
+            ],
+            
+            // Nível 11
+            [
+                {
+                    name: "Vento Divino",
+                    description: "Empurra inimigos ao ser atingido",
+                    apply: () => {
+                        gameState.divineWind = true;
+                    }
+                },
+                {
+                    name: "Fúria do Dragão",
+                    description: "Chance de matar inimigos fracos instantaneamente",
+                    apply: () => {
+                        gameState.dragonRage = true;
+                    }
+                },
+                {
+                    name: "Zênite",
+                    description: "Todos os atributos aumentados em 25%",
+                    apply: () => {
+                        config.shurikenSpeed *= 1.25;
+                        Shuriken.prototype.damage *= 1.25;
+                        gameState.player.speed *= 1.25;
+                        gameState.player.maxHealth *= 1.25;
+                        gameState.player.health *= 1.25;
+                        config.shurikenCooldown *= 0.75;
+                    }
+                }
+            ]
+        ];
+
+        // Funções do jogo
+        function init() {
+            gameState.canvas = document.getElementById('gameCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Configurar controles
+            window.addEventListener('keydown', (e) => {
+                gameState.keys[e.code] = true;
+                
+                // Verificar teclas de power up (1, 2, 3)
+                if (gameState.currentPowerups.length > 0) {
+                    if (e.code === 'Digit1') {
+                        selectPowerUpByIndex(0);
+                    } else if (e.code === 'Digit2') {
+                        selectPowerUpByIndex(1);
+                    } else if (e.code === 'Digit3') {
+                        selectPowerUpByIndex(2);
+                    }
+                }
+            });
+            
+            window.addEventListener('keyup', (e) => {
+                gameState.keys[e.code] = false;
+            });
+            
+            gameState.canvas.addEventListener('mousemove', (e) => {
+                const rect = gameState.canvas.getBoundingClientRect();
+                gameState.mouse.x = e.clientX - rect.left;
+                gameState.mouse.y = e.clientY - rect.top;
+            });
+            
+            gameState.canvas.addEventListener('mousedown', (e) => {
+                gameState.mouse.isDown = true;
+            });
+            
+            gameState.canvas.addEventListener('mouseup', (e) => {
+                gameState.mouse.isDown = false;
+            });
+            
+            // Botões de power up
+            document.getElementById('powerup-btn-1').addEventListener('click', () => selectPowerUpByIndex(0));
+            document.getElementById('powerup-btn-2').addEventListener('click', () => selectPowerUpByIndex(1));
+            document.getElementById('powerup-btn-3').addEventListener('click', () => selectPowerUpByIndex(2));
+            
+            // Botão de reiniciar
+            document.getElementById('restart-btn').addEventListener('click', resetGame);
+            
+            // Iniciar jogo
+            resetGame();
+            gameLoop(0);
+        }
+
+        function resizeCanvas() {
+            gameState.canvas.width = window.innerWidth;
+            gameState.canvas.height = window.innerHeight;
+        }
+
+        function resetGame() {
+            // Resetar estado do jogo
+            gameState.player = new Player(
+                gameState.canvas.width / 2,
+                gameState.canvas.height / 2
+            );
+            
+            gameState.shurikens = [];
+            gameState.enemies = [];
+            gameState.bosses = [];
+            gameState.particles = [];
+            gameState.explosionHitboxes = [];
+            gameState.wave = 1;
+            gameState.waveTimer = 0;
+            gameState.score = 0;
+            gameState.xp = 0;
+            gameState.xpToLevel = config.xpRequirements[0];
+            gameState.level = 1;
+            gameState.gameOver = false;
+            gameState.spawnTimer = 0;
+            gameState.shurikenTimer = 0;
+            gameState.activePowerups = [];
+            gameState.bossActive = false;
+            gameState.bossSpawned = false;
+            gameState.currentPowerups = [];
+            gameState.doubleShotChance = 0;
+            gameState.usedSecondWind = false;
+            
+            // Resetar configurações
+            config.shurikenSpeed = 10;
+            config.shurikenCooldown = 300;
+            Shuriken.prototype.damage = 10;
+            Shuriken.prototype.radius = 8;
+            Shuriken.prototype.piercing = false;
+            Shuriken.prototype.bounces = 0;
+            Shuriken.prototype.explosive = false;
+            Shuriken.prototype.electric = false;
+            
+            // Resetar flags de power ups
+            gameState.healthRegen = false;
+            gameState.timeSlow = false;
+            gameState.ninjaDash = false;
+            gameState.dodgeChance = 0;
+            gameState.shadowStep = false;
+            gameState.bloodlust = false;
+            gameState.toxicCloud = false;
+            gameState.omnislash = false;
+            gameState.secondWind = false;
+            gameState.finalGambit = false;
+            gameState.divineWind = false;
+            gameState.dragonRage = false;
+            
+            // Resetar função de atirar
+            throwShuriken = originalThrowShuriken;
+            
+            // Esconder UIs
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('powerups').style.display = 'none';
+            document.getElementById('boss-health').style.display = 'none';
+            document.getElementById('powerup-buttons').style.display = 'none';
+            
+            // Atualizar UI
+            updateUI();
+        }
+
+        function originalThrowShuriken(x, y, angle) {
+            const shuriken = new Shuriken(x, y, angle);
+            gameState.shurikens.push(shuriken);
+            
+            // Verificar chance de tiro duplo
+            if (gameState.doubleShotChance > 0 && Math.random() < gameState.doubleShotChance) {
+                const offsetAngle = (Math.random() - 0.5) * 0.3; // Pequeno ângulo aleatório
+                const extraShuriken = new Shuriken(x, y, angle + offsetAngle);
+                gameState.shurikens.push(extraShuriken);
+            }
+        }
+
+        let throwShuriken = originalThrowShuriken;
+
+        function gameLoop(timestamp) {
+            if (!gameState.lastTime) gameState.lastTime = timestamp;
+            const deltaTime = timestamp - gameState.lastTime;
+            gameState.lastTime = timestamp;
+            
+            if (gameState.gameOver) {
+                showGameOver();
+                return;
+            }
+            
+            // Atualizar elementos do jogo
+            updateGame(deltaTime);
+            
+            // Renderizar
+            render();
+            
+            // Continuar loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updateGame(deltaTime) {
+            // Atualizar jogador
+            gameState.player.update(deltaTime);
+            
+            // Atirar shurikens
+            gameState.shurikenTimer += deltaTime;
+            if (gameState.mouse.isDown && gameState.shurikenTimer >= config.shurikenCooldown) {
+                throwShuriken(
+                    gameState.player.x,
+                    gameState.player.y,
+                    Math.atan2(
+                        gameState.mouse.y - gameState.player.y,
+                        gameState.mouse.x - gameState.player.x
+                    )
+                );
+                gameState.shurikenTimer = 0;
+            }
+            
+            // Atualizar shurikens
+            for (let i = gameState.shurikens.length - 1; i >= 0; i--) {
+                const shuriken = gameState.shurikens[i];
+                shuriken.update(deltaTime);
+                
+                // Verificar colisão com inimigos
+                for (let j = gameState.enemies.length - 1; j >= 0; j--) {
+                    const enemy = gameState.enemies[j];
+                    const dx = shuriken.x - enemy.x;
+                    const dy = shuriken.y - enemy.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < shuriken.radius + enemy.radius) {
+                        const died = enemy.takeDamage(shuriken.damage);
+                        
+                        // Criar partículas de impacto
+                        createParticles(
+                            enemy.x,
+                            enemy.y,
+                            5,
+                            enemy.color
+                        );
+                        
+                        // Se for explosivo, criar explosão
+                        if (shuriken.explosive) {
+                            createExplosion(shuriken.x, shuriken.y, 50, shuriken.damage * 0.8);
+                        }
+                        
+                        if (died) {
+                            // Adicionar XP
+                            gameState.score += enemy.xpValue;
+                            gameState.xp += enemy.xpValue;
+                            
+                            // Criar partículas de morte
+                            createParticles(
+                                enemy.x,
+                                enemy.y,
+                                15,
+                                enemy.color
+                            );
+                            
+                            // Efeito de dash (se tiver o power up)
+                            if (gameState.ninjaDash) {
+                                gameState.player.health = Math.min(
+                                    gameState.player.maxHealth,
+                                    gameState.player.health + 5
+                                );
+                            }
+                            
+                            // Shadow Step (teleporte em morte)
+                            if (gameState.shadowStep && Math.random() < 0.3) {
+                                const angle = Math.random() * Math.PI * 2;
+                                const distance = 100;
+                                gameState.player.x += Math.cos(angle) * distance;
+                                gameState.player.y += Math.sin(angle) * distance;
+                                createParticles(enemy.x, enemy.y, 20, '#888');
+                            }
+                            
+                            // Bloodlust (aumenta velocidade de ataque)
+                            if (gameState.bloodlust) {
+                                config.shurikenCooldown = Math.max(100, config.shurikenCooldown * 0.95);
+                            }
+                            
+                            // Toxic Cloud (nuvem de veneno)
+                            if (gameState.toxicCloud) {
+                                const cloud = new Enemy(enemy.x, enemy.y, 'weak');
+                                cloud.speed = 0;
+                                cloud.damage = 5;
+                                cloud.color = '#0f0';
+                                cloud.radius = 40;
+                                cloud.xpValue = 0;
+                                cloud.lifetime = 3000;
+                                gameState.enemies.push(cloud);
+                            }
+                            
+                            // Remover inimigo
+                            gameState.enemies.splice(j, 1);
+                            // Remover hitbox de explosão associada
+                            gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
+                                h => h !== enemy.explosionHitbox
+                            );
+                        }
+                        
+                        // Remover shuriken se não for perfurante
+                        if (!shuriken.piercing) {
+                            gameState.shurikens.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+                
+                // Remover shurikens velhos
+                if (gameState.shurikens[i] && gameState.shurikens[i].lifetime <= 0) {
+                    gameState.shurikens.splice(i, 1);
+                }
+            }
+            
+            // Atualizar inimigos
+            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+                const enemy = gameState.enemies[i];
+                enemy.update(deltaTime);
+                
+                // Aplicar efeitos de queimadura/veneno
+                if (enemy.burn) {
+                    enemy.burn.timer += deltaTime;
+                    if (enemy.burn.timer >= 1000) { // Dano a cada segundo
+                        enemy.takeDamage(enemy.burn.damage);
+                        enemy.burn.timer = 0;
+                        createParticles(enemy.x, enemy.y, 2, '#f80');
+                    }
+                    if (enemy.burn.timer >= enemy.burn.duration) {
+                        enemy.burn = null;
+                        enemy.color = enemy.type === 'weak' ? '#f88' : 
+                                     enemy.type === 'medium' ? '#f55' : 
+                                     enemy.type === 'strong' ? '#f00' : '#c00';
+                    }
+                }
+                
+                if (enemy.poison) {
+                    enemy.poison.timer += deltaTime;
+                    if (enemy.poison.timer >= 500) {
+                        enemy.takeDamage(enemy.poison.damage);
+                        enemy.poison.timer = 0;
+                        createParticles(enemy.x, enemy.y, 2, '#0f0');
+                    }
+                    if (enemy.poison.timer >= enemy.poison.duration) {
+                        enemy.poison = null;
+                        enemy.color = enemy.type === 'weak' ? '#f88' : 
+                                     enemy.type === 'medium' ? '#f55' : 
+                                     enemy.type === 'strong' ? '#f00' : '#c00';
+                    }
+                }
+                
+                // Remover inimigos com lifetime (de habilidades de boss)
+                if (enemy.lifetime !== undefined) {
+                    enemy.lifetime -= deltaTime;
+                    if (enemy.lifetime <= 0) {
+                        gameState.enemies.splice(i, 1);
+                        // Remover hitbox de explosão associada
+                        gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
+                            h => h !== enemy.explosionHitbox
+                        );
+                    }
+                }
+            }
+            
+            // Atualizar bosses
+            for (let i = gameState.bosses.length - 1; i >= 0; i--) {
+                const boss = gameState.bosses[i];
+                boss.update(deltaTime);
+                
+                // Verificar colisão com shurikens
+                for (let j = gameState.shurikens.length - 1; j >= 0; j--) {
+                    const shuriken = gameState.shurikens[j];
+                    const dx = shuriken.x - boss.x;
+                    const dy = shuriken.y - boss.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < shuriken.radius + boss.radius) {
+                        const died = boss.takeDamage(shuriken.damage);
+                        
+                        // Criar partículas de impacto
+                        createParticles(
+                            boss.x,
+                            boss.y,
+                            10,
+                            boss.color
+                        );
+                        
+                        if (died) {
+                            // Criar partículas de morte
+                            createParticles(
+                                boss.x,
+                                boss.y,
+                                30,
+                                boss.color
+                            );
+                            
+                            // Remover boss
+                            gameState.bosses.splice(i, 1);
+                            // Remover hitbox de explosão associada
+                            gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
+                                h => h !== boss.explosionHitbox
+                            );
+                        }
+                        
+                        // Remover shuriken se não for perfurante
+                        if (!shuriken.piercing) {
+                            gameState.shurikens.splice(j, 1);
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+            
+            // Atualizar partículas
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                gameState.particles[i].update(deltaTime);
+                if (gameState.particles[i].lifetime <= 0) {
+                    gameState.particles.splice(i, 1);
+                }
+            }
+            
+            // Spawn de inimigos
+            gameState.spawnTimer += deltaTime;
+            const spawnRate = Math.max(500, config.enemySpawnRate - gameState.wave * 50);
+            
+            if (gameState.spawnTimer >= spawnRate && !gameState.bossActive) {
+                spawnEnemy();
+                gameState.spawnTimer = 0;
+            }
+            
+            // Atualizar onda
+            gameState.waveTimer += deltaTime;
+            if (gameState.waveTimer >= config.waveDuration) {
+                nextWave();
+            }
+            
+            // Verificar se deve spawnar um boss
+            if (!gameState.bossActive && !gameState.bossSpawned && gameState.wave % 5 === 0) {
+                spawnBoss();
+                gameState.bossSpawned = true;
+            }
+            
+            // Verificar XP e level up
+            if (gameState.xp >= gameState.xpToLevel && gameState.level < 11) {
+                showPowerUpSelection();
+            }
+            
+            // Regeneração de vida (se tiver o power up)
+            if (gameState.healthRegen) {
+                gameState.player.health = Math.min(
+                    gameState.player.maxHealth,
+                    gameState.player.health + gameState.player.maxHealth * 0.01 * (deltaTime / 1000)
+                );
+            }
+            
+            // Slow time (se tiver o power up e vida baixa)
+            if (gameState.timeSlow && gameState.player.health < gameState.player.maxHealth * 0.3) {
+                for (const enemy of gameState.enemies) {
+                    enemy.speed = enemy.originalSpeed * 0.5;
+                }
+            }
+            
+            // Omnislash (rajada de shurikens aleatória)
+            if (gameState.omnislash && Math.random() < 0.005) {
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        throwShuriken(
+                            gameState.player.x,
+                            gameState.player.y,
+                            Math.random() * Math.PI * 2
+                        );
+                    }, i * 100);
+                }
+            }
+            
+            // Final Gambit (triplo de dano quando vida baixa)
+            if (gameState.finalGambit && gameState.player.health < gameState.player.maxHealth * 0.2) {
+                Shuriken.prototype.damage = 30;
+            }
+            
+            // Dragon's Rage (chance de matar inimigos fracos instantaneamente)
+            if (gameState.dragonRage) {
+                for (const enemy of gameState.enemies) {
+                    if (enemy.type === 'weak' && Math.random() < 0.05) {
+                        enemy.takeDamage(enemy.health);
+                    }
+                }
+            }
+            
+            // Atualizar UI
+            updateUI();
+        }
+
+        function spawnEnemy() {
+            let type = 'weak';
+            const rand = Math.random();
+            const waveMod = Math.min(10, Math.floor(gameState.wave / 3));
+            
+            // Escolher tipo baseado na onda e probabilidade
+            if (gameState.wave >= 15 && rand < 0.1) {
+                type = 'thunder';
+            } else if (gameState.wave >= 12 && rand < 0.1) {
+                type = 'assassin';
+            } else if (gameState.wave >= 10 && rand < 0.1) {
+                type = 'tank';
+            } else if (gameState.wave >= 8 && rand < 0.1) {
+                type = 'elite';
+            } else if (gameState.wave >= 6 && rand < 0.3) {
+                type = 'strong';
+            } else if (gameState.wave >= 3 && rand < 0.6) {
+                type = 'medium';
+            }
+            
+            // Posição aleatória nas bordas
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            
+            switch(side) {
+                case 0: // Topo
+                    x = Math.random() * gameState.canvas.width;
+                    y = -20;
+                    break;
+                case 1: // Direita
+                    x = gameState.canvas.width + 20;
+                    y = Math.random() * gameState.canvas.height;
+                    break;
+                case 2: // Baixo
+                    x = Math.random() * gameState.canvas.width;
+                    y = gameState.canvas.height + 20;
+                    break;
+                case 3: // Esquerda
+                    x = -20;
+                    y = Math.random() * gameState.canvas.height;
+                    break;
+            }
+            
+            const enemy = new Enemy(x, y, type);
+            
+            // Aumentar dificuldade com as ondas
+            const waveMultiplier = 1 + (waveMod * 0.1);
+            enemy.health *= waveMultiplier;
+            enemy.maxHealth = enemy.health;
+            enemy.damage *= waveMultiplier;
+            enemy.originalSpeed = enemy.speed;
+            
+            gameState.enemies.push(enemy);
+        }
+
+        function spawnBoss() {
+            gameState.bossActive = true;
+            
+            const bossTypes = ['dragon', 'oni', 'shadow', 'thunder'];
+            const type = bossTypes[Math.floor(Math.random() * bossTypes.length)];
+            
+            const boss = new Boss(type);
+            gameState.bosses.push(boss);
+            
+            // Mostrar UI do boss
+            document.getElementById('boss-health').style.display = 'block';
+            document.getElementById('boss-name').textContent = boss.name;
+        }
+
+        function nextWave() {
+            gameState.wave++;
+            gameState.waveTimer = 0;
+            gameState.bossSpawned = false;
+            
+            // Aumentar dificuldade
+            config.enemySpawnRate = Math.max(500, config.enemySpawnRate - 50);
+        }
+
+        function createParticles(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 3;
+                
+                gameState.particles.push(new Particle(
+                    x,
+                    y,
+                    color,
+                    Math.random() * 3 + 1,
+                    {
+                        x: Math.cos(angle) * speed,
+                        y: Math.sin(angle) * speed
+                    },
+                    Math.random() * 1000 + 500
+                ));
+            }
+        }
+
+        function createExplosion(x, y, radius, damage) {
+            // Partículas de explosão
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5;
+                
+                gameState.particles.push(new Particle(
+                    x,
+                    y,
+                    '#f80',
+                    Math.random() * 5 + 2,
+                    {
+                        x: Math.cos(angle) * speed,
+                        y: Math.sin(angle) * speed
+                    },
+                    Math.random() * 1000 + 500
+                ));
+            }
+            
+            // Dano aos inimigos
+            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+                const enemy = gameState.enemies[i];
+                const dx = enemy.x - x;
+                const dy = enemy.y - y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < radius) {
+                    const died = enemy.takeDamage(damage * (1 - dist / radius));
+                    if (died) {
+                        gameState.score += enemy.xpValue;
+                        gameState.xp += enemy.xpValue;
+                        gameState.enemies.splice(i, 1);
+                        // Remover hitbox de explosão associada
+                        gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
+                            h => h !== enemy.explosionHitbox
+                        );
+                    }
+                }
+            }
+        }
+
+        function createLightning(x1, y1, x2, y2) {
+            const segments = 10;
+            const points = [];
+            
+            points.push({ x: x1, y: y1 });
+            
+            for (let i = 1; i < segments; i++) {
+                const t = i / segments;
+                const x = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 30;
+                const y = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 30;
+                points.push({ x, y });
+            }
+            
+            points.push({ x: x2, y: y2 });
+            
+            // Desenhar relâmpago
+            gameState.ctx.save();
+            gameState.ctx.beginPath();
+            gameState.ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length; i++) {
+                gameState.ctx.lineTo(points[i].x, points[i].y);
+            }
+            
+            gameState.ctx.strokeStyle = '#0ff';
+            gameState.ctx.lineWidth = 2;
+            gameState.ctx.stroke();
+            gameState.ctx.restore();
+            
+            // Partículas
+            for (let i = 0; i < 10; i++) {
+                const t = Math.random();
+                const x = x1 + (x2 - x1) * t;
+                const y = y1 + (y2 - y1) * t;
+                
+                gameState.particles.push(new Particle(
+                    x,
+                    y,
+                    '#0ff',
+                    Math.random() * 2 + 1,
+                    {
+                        x: (Math.random() - 0.5) * 3,
+                        y: (Math.random() - 0.5) * 3
+                    },
+                    Math.random() * 500 + 200
+                ));
+            }
+        }
+
+        function showPowerUpSelection() {
+            gameState.gamePaused = true;
+            
+            // Obter power ups para o nível atual
+            const levelPowerups = powerupsByLevel[gameState.level];
+            gameState.currentPowerups = levelPowerups;
+            
+            // Mostrar botões de power up
+            const buttonsContainer = document.getElementById('powerup-buttons');
+            buttonsContainer.style.display = 'flex';
+            
+            // Mostrar descrições na UI antiga (opcional)
+            const optionsContainer = document.getElementById('powerup-options');
+            optionsContainer.innerHTML = '';
+            
+            levelPowerups.forEach((powerup, index) => {
+                const option = document.createElement('div');
+                option.className = 'powerup-option';
+                option.innerHTML = `<strong>${index+1}: ${powerup.name}</strong><br>${powerup.description}`;
+                optionsContainer.appendChild(option);
+            });
+            
+            document.getElementById('powerups').style.display = 'block';
+        }
+
+        function selectPowerUpByIndex(index) {
+            if (index < 0 || index >= gameState.currentPowerups.length) return;
+            
+            const powerup = gameState.currentPowerups[index];
+            
+            // Aplicar power up
+            powerup.apply();
+            gameState.activePowerups.push(powerup);
+            
+            // Atualizar level
+            gameState.level++;
+            gameState.xp -= gameState.xpToLevel;
+            
+            if (gameState.level <= 11) {
+                gameState.xpToLevel = config.xpRequirements[gameState.level - 1];
+            } else {
+                gameState.xpToLevel = Infinity;
+            }
+            
+            // Esconder UIs de seleção
+            document.getElementById('powerups').style.display = 'none';
+            document.getElementById('powerup-buttons').style.display = 'none';
+            gameState.gamePaused = false;
+            gameState.currentPowerups = [];
+            
+            // Atualizar UI
+            updateUI();
+        }
+
+        function updateUI() {
+            // Barra de vida
+            const healthPercent = gameState.player.health / gameState.player.maxHealth;
+            document.getElementById('health-fill').style.width = `${healthPercent * 100}%`;
+            
+            // Barra de XP
+            const xpPercent = Math.min(100, (gameState.xp / gameState.xpToLevel) * 100);
+            document.getElementById('xp-fill').style.width = `${xpPercent}%`;
+            
+            // Wave e score
+            document.getElementById('wave-info').textContent = `Onda: ${gameState.wave}`;
+            document.getElementById('score').textContent = `Pontuação: ${gameState.score}`;
+            document.getElementById('level').textContent = `Nível: ${gameState.level}`;
+            
+            // Barra de vida do boss
+            if (gameState.bosses.length > 0) {
+                const boss = gameState.bosses[0];
+                const bossHealthPercent = boss.health / boss.maxHealth;
+                document.getElementById('boss-health-fill').style.width = `${bossHealthPercent * 100}%`;
+            }
+        }
+
+        function showGameOver() {
+            document.getElementById('final-score').textContent = `Pontuação: ${gameState.score}`;
+            document.getElementById('final-wave').textContent = `Onda: ${gameState.wave}`;
+            document.getElementById('final-level').textContent = `Nível: ${gameState.level}`;
+            document.getElementById('game-over').style.display = 'block';
+        }
+
+        function render() {
+            // Limpar canvas
+            gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            // Desenhar fundo
+            gameState.ctx.fillStyle = '#111';
+            gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            // Desenhar grade (opcional)
+            gameState.ctx.strokeStyle = '#222';
+            gameState.ctx.lineWidth = 1;
+            const gridSize = 50;
+            
+            for (let x = 0; x < gameState.canvas.width; x += gridSize) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x, 0);
+                gameState.ctx.lineTo(x, gameState.canvas.height);
+                gameState.ctx.stroke();
+            }
+            
+            for (let y = 0; y < gameState.canvas.height; y += gridSize) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(0, y);
+                gameState.ctx.lineTo(gameState.canvas.width, y);
+                gameState.ctx.stroke();
+            }
+            
+            // Desenhar partículas
+            gameState.particles.forEach(p => p.draw(gameState.ctx));
+            
+            // Desenhar inimigos
+            gameState.enemies.forEach(e => e.draw(gameState.ctx));
+            
+            // Desenhar bosses
+            gameState.bosses.forEach(b => b.draw(gameState.ctx));
+            
+            // Desenhar shurikens
+            gameState.shurikens.forEach(s => s.draw(gameState.ctx));
+            
+            // Desenhar jogador
+            gameState.player.draw(gameState.ctx);
+        }
+
+        // Iniciar o jogo quando a página carregar
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
