@@ -297,7 +297,7 @@
                 // Aplicar queimadura se estiver queimando
                 if (this.burning) {
                     this.burning.timer += deltaTime;
-                    if (this.burning.timer >= 1000) {
+                    if (this.burning.timer >= 400) {
                         this.takeDamage(this.burning.damage);
                         this.burning.timer = 0;
                     }
@@ -363,7 +363,7 @@
                 this.angle = angle;
                 this.speed = config.shurikenSpeed;
                 this.radius = 8;
-                this.damage = 6;
+                this.damage = 8;
                 this.lifetime = 2000;
                 this.piercing = false;
                 this.explosive = false;
@@ -415,6 +415,47 @@
                 ctx.strokeStyle = strokeColor;
                 ctx.lineWidth = 1;
                 ctx.stroke();
+                
+                ctx.restore();
+            }
+        }
+
+        class FireBreathProjectile {
+            constructor(x, y, angle) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = 15;
+                this.radius = 12;
+                this.damage = 10;
+                this.lifetime = 2000;
+            }
+
+            update(deltaTime) {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.lifetime -= deltaTime;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                // Desenhar labareda de fogo
+                ctx.beginPath();
+                ctx.moveTo(0, -this.radius * 0.5);
+                ctx.quadraticCurveTo(this.radius * 1.5, 0, 0, this.radius * 0.5);
+                ctx.quadraticCurveTo(-this.radius * 1.5, 0, 0, -this.radius * 0.5);
+                ctx.closePath();
+                
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 1.5);
+                gradient.addColorStop(0, '#ff6600');
+                gradient.addColorStop(0.5, '#ff3300');
+                gradient.addColorStop(1, '#ff0000');
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
                 
                 ctx.restore();
             }
@@ -555,6 +596,13 @@
                         this.isElite = true;
                         break;
                 }
+                
+                // Aumentar vida baseado na wave
+                const waveMultiplier = Math.pow(1.2, gameState.wave - 1);
+                this.health *= waveMultiplier;
+                this.maxHealth = this.health;
+                this.damage *= waveMultiplier;
+                this.originalSpeed = this.speed;
             }
 
             update(deltaTime) {
@@ -762,6 +810,12 @@
                         break;
                 }
                 
+                // Aumentar vida baseado na wave
+                const waveMultiplier = Math.pow(1.2, gameState.wave - 1);
+                this.health *= waveMultiplier;
+                this.maxHealth = this.health;
+                this.damage *= waveMultiplier;
+                
                 const side = Math.floor(Math.random() * 4);
                 switch(side) {
                     case 0:
@@ -877,7 +931,7 @@
                                 Math.pow(gameState.player.y - targetY, 2)
                             );
                             if (distToPlayer < 60) {
-                                gameState.player.takeDamage(50);
+                                gameState.player.takeDamage(10);
                                 gameState.player.applyBurn(5, 5000);
                             }
                             
@@ -897,25 +951,18 @@
             }
 
             useFireBreath() {
-                for (let i = -5; i <= 5; i++) {
+                for (let i = 0; i < 50; i++) {
                     const angle = Math.atan2(
                         gameState.player.y - this.y,
                         gameState.player.x - this.x
-                    ) + i * 0.2;
+                    ) + (Math.random() - 0.5) * 0.5;
                     
-                    const fireball = new Shuriken(
+                    const fireProjectile = new FireBreathProjectile(
                         this.x + Math.cos(angle) * this.radius,
                         this.y + Math.sin(angle) * this.radius,
                         angle
                     );
-                    fireball.speed = 4;
-                    fireball.damage = 25;
-                    fireball.color = '#f50';
-                    fireball.radius = 12;
-                    fireball.lifetime = 1500;
-                    fireball.explosive = true;
-                    
-                    gameState.shurikens.push(fireball);
+                    gameState.shurikens.push(fireProjectile);
                 }
             }
 
@@ -1560,6 +1607,21 @@
                 const shuriken = gameState.shurikens[i];
                 shuriken.update(deltaTime);
                 
+                // Verificar colisão com jogador (para projéteis de fogo do dragão)
+                if (shuriken instanceof FireBreathProjectile) {
+                    const dx = shuriken.x - gameState.player.x;
+                    const dy = shuriken.y - gameState.player.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < shuriken.radius + gameState.player.radius) {
+                        gameState.player.takeDamage(shuriken.damage);
+                        gameState.player.applyBurn(10, 2000); // 10 de dano a cada 0.4s por 2s
+                        gameState.shurikens.splice(i, 1);
+                        createParticles(shuriken.x, shuriken.y, 10, '#f80');
+                        continue;
+                    }
+                }
+                
                 for (let j = gameState.enemies.length - 1; j >= 0; j--) {
                     const enemy = gameState.enemies[j];
                     const dx = shuriken.x - enemy.x;
@@ -1822,13 +1884,6 @@
             }
             
             const enemy = new Enemy(x, y, type);
-            
-            const waveMultiplier = 1 + (waveMod * 0.1);
-            enemy.health *= waveMultiplier;
-            enemy.maxHealth = enemy.health;
-            enemy.damage *= waveMultiplier;
-            enemy.originalSpeed = enemy.speed;
-            
             gameState.enemies.push(enemy);
         }
 
@@ -1836,7 +1891,19 @@
             gameState.bossActive = true;
             
             const bossTypes = ['dragon', 'oni', 'shadow', 'thunder'];
-            const type = bossTypes[Math.floor(Math.random() * bossTypes.length)];
+            const randomValue = Math.random();
+            let type;
+            
+            // Distribuição de 25% para cada tipo de boss
+            if (randomValue < 0.25) {
+                type = bossTypes[0]; // dragon
+            } else if (randomValue < 0.5) {
+                type = bossTypes[1]; // oni
+            } else if (randomValue < 0.75) {
+                type = bossTypes[2]; // shadow
+            } else {
+                type = bossTypes[3]; // thunder
+            }
             
             const boss = new Boss(type);
             gameState.bosses.push(boss);
