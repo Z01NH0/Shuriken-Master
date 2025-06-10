@@ -838,7 +838,7 @@
                     this.y += (dy / dist) * this.speed;
                 }
                 
-                // Colisão com jogador - dano imediato com cooldown individual
+              
                 if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
                     gameState.player.takeDamage(this.damage);
                     this.lastAttack = 0;
@@ -971,8 +971,8 @@
                 
                 switch(type) {
                     case 'dragon':
-                        this.health = 1000;
-                        this.maxHealth = 1000;
+                        this.health = 800;
+                        this.maxHealth = 800;
                         this.speed = 2.4;
                         this.damage = 22;
                         this.color = '#f80';
@@ -980,24 +980,24 @@
                         this.miniDragonCooldown = 8000; 
                         break;
                     case 'oni':
-                        this.health = 1200;
-                        this.maxHealth = 1200;
+                        this.health = 1000;
+                        this.maxHealth = 1000;
                         this.speed = 2.8;
                         this.damage = 17;
                         this.color = '#f0f';
                         this.name = "Guerreiro Oni";
                         break;
                     case 'shadow':
-                        this.health = 1100;
-                        this.maxHealth = 1100;
+                        this.health = 1300;
+                        this.maxHealth = 1300;
                         this.speed = 3.0;
                         this.damage = 13;
                         this.color = '#08f';
                         this.name = "Mestre das Sombras";
                         break;
                     case 'thunder':
-                        this.health = 1000;
-                        this.maxHealth = 1000;
+                        this.health = 1150;
+                        this.maxHealth = 1150;
                         this.speed = 3.5;
                         this.damage = 10;
                         this.color = '#ff0';
