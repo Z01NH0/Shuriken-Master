@@ -472,7 +472,7 @@
                 this.angle = angle;
                 this.speed = 12;
                 this.radius = 12;
-                this.damage = 11;
+                this.damage = 2;
                 this.lifetime = 2000;
             }
 
@@ -528,9 +528,9 @@
                 this.directionChangeTimer += deltaTime;
                 this.lastAttack += deltaTime;
                 
-                // Mudar direção periodicamente
+               
                 if (this.directionChangeTimer >= this.directionChangeInterval) {
-                    // Direção geralmente em direção ao jogador, mas com variação
+                    
                     const targetAngle = Math.atan2(
                         gameState.player.y - this.y,
                         gameState.player.x - this.x
@@ -542,7 +542,7 @@
                 this.x += Math.cos(this.angle) * this.speed;
                 this.y += Math.sin(this.angle) * this.speed;
                 
-                // Verificar colisão com jogador
+               
                 const dx = gameState.player.x - this.x;
                 const dy = gameState.player.y - this.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
@@ -624,7 +624,7 @@
                 if (projRight > playerLeft && projLeft < playerRight &&
                     projBottom > playerTop && projTop < playerBottom) {
                     player.takeDamage(this.damage);
-                    player.applyShock(3000); // 3 segundos de choque
+                    player.applyShock(2000); 
                     this.lifetime = 0;
                 }
             }
