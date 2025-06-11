@@ -213,7 +213,6 @@
     </div>
 
     <script>
-        
         const config = {
             playerSpeed: 4,
             playerHealth: 135,
@@ -224,7 +223,6 @@
             xpRequirements: [250, 500, 850, 1300, 1650, 2100, 2700, 3250, 3800, 4550, 5000]
         };
 
-       
         const gameState = {
             canvas: null,
             ctx: null,
@@ -255,10 +253,10 @@
             shocked: false,
             shockTimer: 0,
             shockDuration: 3000,
-            miniDragonTimer: 0
+            miniDragonTimer: 0,
+            omegaBossActive: false
         };
 
-        
         class Player {
             constructor(x, y) {
                 this.x = x;
@@ -271,10 +269,12 @@
                 this.burning = null;
                 this.shocked = false;
                 this.shockTimer = 0;
+                this.slowed = false;
+                this.slowTimer = 0;
+                this.originalSpeed = this.speed;
             }
 
             update(deltaTime) {
-               
                 let moveX = 0;
                 let moveY = 0;
 
@@ -283,23 +283,20 @@
                 if (gameState.keys['KeyA']) moveX -= 1;
                 if (gameState.keys['KeyD']) moveX += 1;
 
-               
                 if (moveX !== 0 && moveY !== 0) {
                     moveX *= 0.7071;
                     moveY *= 0.7071;
                 }
 
-                this.x += moveX * this.speed;
-                this.y += moveY * this.speed;
+                const effectiveSpeed = this.slowed ? this.speed * 0.7 : this.speed;
+                this.x += moveX * effectiveSpeed;
+                this.y += moveY * effectiveSpeed;
 
-                
                 const borderBuffer = 5;
                 this.x = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.width - this.radius - borderBuffer, this.x));
                 this.y = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.height - this.radius - borderBuffer, this.y));
 
-                
                 this.angle = Math.atan2(gameState.mouse.y - this.y, gameState.mouse.x - this.x);
-                
                 
                 if (this.burning) {
                     this.burning.timer += deltaTime;
@@ -312,7 +309,6 @@
                     }
                 }
                 
-                
                 if (this.shocked) {
                     this.shockTimer += deltaTime;
                     if (this.shockTimer >= 500) {
@@ -321,6 +317,15 @@
                     }
                     if (this.shockTimer >= this.shockDuration) {
                         this.shocked = false;
+                        this.speed = this.originalSpeed;
+                    }
+                }
+
+                if (this.slowed) {
+                    this.slowTimer += deltaTime;
+                    if (this.slowTimer >= 3000) {
+                        this.slowed = false;
+                        this.speed = this.originalSpeed;
                     }
                 }
             }
@@ -330,7 +335,6 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
-               
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 
@@ -346,6 +350,8 @@
                     }
                 } else if (this.burning) {
                     ctx.fillStyle = '#f80';
+                } else if (this.slowed) {
+                    ctx.fillStyle = '#00f';
                 } else {
                     ctx.fillStyle = '#333';
                 }
@@ -355,12 +361,10 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius * 0.8, 0, Math.PI);
                 ctx.fillStyle = '#000';
                 ctx.fill();
-                
                 
                 ctx.beginPath();
                 ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
@@ -393,11 +397,19 @@
                 this.shocked = true;
                 this.shockTimer = 0;
                 this.shockDuration = duration;
+                this.speed = this.originalSpeed * 0.7;
                 
                 Shuriken.prototype.damage *= 0.6;
                 setTimeout(() => {
                     Shuriken.prototype.damage /= 0.6;
                 }, duration);
+            }
+
+            applySlow(amount, duration) {
+                this.slowed = true;
+                this.slowTimer = 0;
+                this.speed = this.originalSpeed * (1 - amount);
+                this.slowDuration = duration;
             }
         }
 
@@ -421,7 +433,6 @@
                 this.y += Math.sin(this.angle) * this.speed;
                 this.lifetime -= deltaTime;
 
-               
                 const borderBuffer = 5;
                 if (this.x < borderBuffer || this.x > gameState.canvas.width - borderBuffer || 
                     this.y < borderBuffer || this.y > gameState.canvas.height - borderBuffer) {
@@ -433,7 +444,6 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle + Math.PI/4);
-                
                 
                 let fillColor = '#fff';
                 let strokeColor = '#f00';
@@ -487,7 +497,6 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
-               
                 ctx.beginPath();
                 ctx.moveTo(0, -this.radius * 0.5);
                 ctx.quadraticCurveTo(this.radius * 1.5, 0, 0, this.radius * 0.5);
@@ -506,14 +515,49 @@
             }
         }
 
+        class DarkMatterProjectile {
+            constructor(x, y, angle) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = 8;
+                this.radius = 10;
+                this.damage = 10;
+                this.lifetime = 3000;
+            }
+
+            update(deltaTime) {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.lifetime -= deltaTime;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+                gradient.addColorStop(0, '#9b59b6');
+                gradient.addColorStop(1, '#8e44ad');
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
         class MiniDragon {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
                 this.radius = 10;
                 this.speed = 4;
-                this.health = 30;
-                this.maxHealth = 30;
+                this.health = 20;
+                this.maxHealth = 20;
                 this.damage = 5;
                 this.color = '#f80';
                 this.xpValue = 0;
@@ -528,9 +572,7 @@
                 this.directionChangeTimer += deltaTime;
                 this.lastAttack += deltaTime;
                 
-               
                 if (this.directionChangeTimer >= this.directionChangeInterval) {
-                    
                     const targetAngle = Math.atan2(
                         gameState.player.y - this.y,
                         gameState.player.x - this.x
@@ -542,7 +584,6 @@
                 this.x += Math.cos(this.angle) * this.speed;
                 this.y += Math.sin(this.angle) * this.speed;
                 
-               
                 const dx = gameState.player.x - this.x;
                 const dy = gameState.player.y - this.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
@@ -559,7 +600,6 @@
                 ctx.fillStyle = this.color;
                 ctx.fill();
                 
-                
                 ctx.beginPath();
                 ctx.moveTo(this.x - this.radius * 0.7, this.y);
                 ctx.lineTo(this.x - this.radius * 1.5, this.y - this.radius * 0.8);
@@ -568,12 +608,10 @@
                 ctx.fillStyle = '#f60';
                 ctx.fill();
                 
-                
                 ctx.beginPath();
                 ctx.arc(this.x + this.radius * 0.5, this.y - this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff';
                 ctx.fill();
-                
                 
                 ctx.beginPath();
                 ctx.arc(this.x + this.radius * 0.8, this.y, this.radius * 0.3, 0.1, Math.PI - 0.1);
@@ -609,7 +647,6 @@
                 this.distanceTraveled += Math.sqrt(moveX * moveX + moveY * moveY);
                 this.lifetime -= deltaTime;
                 
-               
                 const player = gameState.player;
                 const playerLeft = player.x - player.radius;
                 const playerRight = player.x + player.radius;
@@ -624,7 +661,7 @@
                 if (projRight > playerLeft && projLeft < playerRight &&
                     projBottom > playerTop && projTop < playerBottom) {
                     player.takeDamage(this.damage);
-                    player.applyShock(2000); 
+                    player.applyShock(3000); 
                     this.lifetime = 0;
                 }
             }
@@ -634,11 +671,9 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
-                
                 ctx.fillStyle = '#0af';
                 ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
                 
-               
                 ctx.strokeStyle = '#0ff';
                 ctx.lineWidth = 2;
                 
@@ -651,6 +686,49 @@
                 }
                 
                 ctx.restore();
+            }
+        }
+
+        class DarkMatterPool {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 110;
+                this.lifetime = 6000;
+                this.damageTimer = 0;
+            }
+            
+            update(deltaTime) {
+                this.lifetime -= deltaTime;
+                this.damageTimer += deltaTime;
+                
+                const player = gameState.player;
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < this.radius + player.radius && this.damageTimer >= 500) {
+                    player.takeDamage(10);
+                    player.applySlow(0.2, 3000);
+                    this.damageTimer = 0;
+                }
+            }
+            
+            draw(ctx) {
+                ctx.globalAlpha = 0.5 * (this.lifetime / 3000);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0, 
+                    this.x, this.y, this.radius
+                );
+                gradient.addColorStop(0, '#8e44ad');
+                gradient.addColorStop(1, '#2c3e50');
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.globalAlpha = 1;
             }
         }
 
@@ -667,7 +745,7 @@
                 this.x = x;
                 this.y = y;
                 this.radius = 90;
-                this.lifetime = 7000;
+                this.lifetime = 5000;
                 this.damage = 0;
                 this.timer = 0;
             }
@@ -735,7 +813,7 @@
                         this.speed = 2.8;
                         this.health = 20;
                         this.maxHealth = 20;
-                        this.damage = 3;
+                        this.damage = 10;
                         this.color = '#f88';
                         this.xpValue = 50;
                         break;
@@ -744,7 +822,7 @@
                         this.speed = 2.2;
                         this.health = 35;
                         this.maxHealth = 35;
-                        this.damage = 7;
+                        this.damage = 15;
                         this.color = '#f55';
                         this.xpValue = 80;
                         break;
@@ -753,7 +831,7 @@
                         this.speed = 2;
                         this.health = 60;
                         this.maxHealth = 60;
-                        this.damage = 10;
+                        this.damage = 20;
                         this.color = '#f00';
                         this.xpValue = 110;
                         break;
@@ -762,7 +840,7 @@
                         this.speed = 2.7;
                         this.health = 100;
                         this.maxHealth = 100;
-                        this.damage = 15;
+                        this.damage = 20;
                         this.color = '#c00';
                         this.xpValue = 160;
                         this.isElite = true;
@@ -773,7 +851,7 @@
                         this.speed = 2.1;
                         this.health = 150;
                         this.maxHealth = 150;
-                        this.damage = 12;
+                        this.damage = 45;
                         this.color = '#880';
                         this.xpValue = 200;
                         this.isElite = true;
@@ -781,20 +859,18 @@
                     case 'assassin':
                         this.radius = 10;
                         this.speed = 3.5;
-                        this.health = 60;
-                        this.maxHealth = 60;
-                        this.damage = 20;
+                        this.health = 15;
+                        this.maxHealth = 15;
+                        this.damage = 60;
                         this.color = '#808';
                         this.xpValue = 180;
                         this.isElite = true;
                         break;
                 }
                 
-               
                 const waveMultiplier = Math.pow(1.2, gameState.wave - 1);
                 this.health *= waveMultiplier;
                 this.maxHealth = this.health;
-                this.damage *= waveMultiplier;
                 this.originalSpeed = this.speed;
             }
 
@@ -838,7 +914,6 @@
                     this.y += (dy / dist) * this.speed;
                 }
                 
-              
                 if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
                     gameState.player.takeDamage(this.damage);
                     this.lastAttack = 0;
@@ -890,11 +965,9 @@
             }
 
             takeDamage(amount) {
-                
                 const damageTaken = amount * (1 - this.defense);
                 this.health -= damageTaken;
                 
-               
                 if (this.isBoss) {
                     this.defense = Math.min(0.7, (1 - (this.health / this.maxHealth)) * 0.7);
                 }
@@ -974,7 +1047,7 @@
                         this.health = 800;
                         this.maxHealth = 800;
                         this.speed = 2.4;
-                        this.damage = 22;
+                        this.damage = 40;
                         this.color = '#f80';
                         this.name = "Dragão Ninja";
                         this.miniDragonCooldown = 8000; 
@@ -982,34 +1055,34 @@
                     case 'oni':
                         this.health = 1000;
                         this.maxHealth = 1000;
-                        this.speed = 2.8;
-                        this.damage = 17;
+                        this.speed = 3.0;
+                        this.damage = 35;
                         this.color = '#f0f';
                         this.name = "Guerreiro Oni";
                         break;
                     case 'shadow':
                         this.health = 1300;
                         this.maxHealth = 1300;
-                        this.speed = 3.0;
-                        this.damage = 13;
+                        this.speed = 2.8;
+                        this.damage =55;
                         this.color = '#08f';
                         this.name = "Mestre das Sombras";
                         break;
                     case 'thunder':
                         this.health = 1150;
                         this.maxHealth = 1150;
-                        this.speed = 3.5;
-                        this.damage = 10;
+                        this.speed = 3.3;
+                        this.damage = 37;
                         this.color = '#ff0';
                         this.name = "Deus do Trovão";
+                        this.abilityCooldown = 6000;
                         break;
                 }
                 
-               
                 const waveMultiplier = Math.pow(1.2, gameState.wave - 1);
                 this.health *= waveMultiplier;
                 this.maxHealth = this.health;
-                this.damage *= waveMultiplier;
+                
                 
                 const side = Math.floor(Math.random() * 4);
                 switch(side) {
@@ -1048,7 +1121,6 @@
                         this.lastFireBreath = 0;
                     }
                     
-                   
                     this.lastMiniDragon += deltaTime;
                     if (this.lastMiniDragon >= this.miniDragonCooldown) {
                         this.spawnMiniDragons();
@@ -1065,13 +1137,12 @@
             useSpecialAbility() {
                 switch(this.type) {
                     case 'dragon':
-                       
                         break;
                     case 'oni':
                         this.x = Math.random() * gameState.canvas.width;
                         this.y = Math.random() * gameState.canvas.height;
                         
-                        for (let i = 0; i < 8; i++) {
+                        for (let i = 0; i < 11; i++) {
                             const angle = (i / 8) * Math.PI * 2;
                             const fire = new Enemy(
                                 this.x + Math.cos(angle) * 100,
@@ -1096,20 +1167,21 @@
                                 'strong'
                             );
                             clone.color = '#08f';
-                            clone.speed = this.speed * 1.2;
+                            clone.speed = this.speed * 1.4;
                             clone.xpValue = 0;
-                            clone.lifetime = 5000;
+                            clone.lifetime = 3000;
                             
                             gameState.enemies.push(clone);
                         }
                         break;
                     case 'thunder':
-                       
-                        for (let i = 0; i < 3; i++) {
-                            const angle = Math.atan2(
-                                gameState.player.y - this.y,
-                                gameState.player.x - this.x
-                            ) + (i - 1) * 0.3;
+                        const angleToPlayer = Math.atan2(
+                            gameState.player.y - this.y,
+                            gameState.player.x - this.x
+                        );
+                        
+                        for (let i = 0; i < 2; i++) {
+                            const angle = angleToPlayer + (i - 2) * 0.1;
                             
                             const projectile = new ThunderProjectile(
                                 this.x,
@@ -1123,7 +1195,7 @@
             }
 
             useFireBreath() {
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < 25; i++) {
                     const angle = Math.atan2(
                         gameState.player.y - this.y,
                         gameState.player.x - this.x
@@ -1139,7 +1211,7 @@
             }
             
             spawnMiniDragons() {
-                for (let i = 0; i < 3; i++) {
+                for (let i = 0; i < 2; i++) {
                     const angle = Math.random() * Math.PI * 2;
                     const distance = this.radius * 0.8;
                     
@@ -1237,6 +1309,256 @@
                 
                 this.defense = Math.min(0.7, (1 - (this.health / this.maxHealth)) * 0.7);
                 return false;
+            }
+        }
+
+        class OmegaBoss extends Enemy {
+            constructor() {
+                super(0, 0, 'strong');
+                this.type = 'omega_boss';
+                this.radius = 100;
+                this.speed = 0;
+                this.health = 7000;
+                this.maxHealth = 7000;
+                this.damage = 50;
+                this.color = '#5b2c6f';
+                this.xpValue = 5000;
+                this.attackCooldown = 2000;
+                this.lastAttack = 0;
+                this.name = "Antigo Deus Caído";
+                this.isBoss = true;
+                this.teleportTimer = 0;
+                this.teleportInterval = 2000;
+                this.projectileTimer = 0;
+                this.projectileInterval = 1000;
+                this.spawnTimer = 0;
+                this.spawnInterval = 1000;
+                this.minionSpawned = false;
+                this.minions = [];
+                this.minionAttackTimer = 0;
+                this.minionAttackInterval = 2000;
+                
+                // Posição inicial aleatória
+                this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
+                this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
+            }
+
+            update(deltaTime) {
+                this.teleportTimer += deltaTime;
+                this.projectileTimer += deltaTime;
+                this.spawnTimer += deltaTime;
+                this.lastAttack += deltaTime;
+                
+                // Teleporte a cada 2 segundos
+                if (this.teleportTimer >= this.teleportInterval) {
+                    this.teleport();
+                    this.teleportTimer = 0;
+                }
+                
+                // Ataque de projéteis a cada 5 segundos
+                if (this.projectileTimer >= this.projectileInterval) {
+                    this.shootDarkMatter();
+                    this.projectileTimer = 0;
+                }
+                
+                // Spawn de inimigos
+                if (this.spawnTimer >= this.spawnInterval) {
+                    this.spawnEnemy();
+                    this.spawnTimer = 0;
+                }
+                
+                // Quando chegar a 35% de vida, spawna minions
+                if (this.health <= this.maxHealth * 0.35 && !this.minionSpawned) {
+                    this.spawnMinions();
+                    this.minionSpawned = true;
+                }
+                
+                // Atualizar minions
+                if (this.minionSpawned) {
+                    this.minionAttackTimer += deltaTime;
+                    if (this.minionAttackTimer >= this.minionAttackInterval) {
+                        this.minionsAttack();
+                        this.minionAttackTimer = 0;
+                    }
+                }
+                
+                // Verificar colisão com o jogador
+                const dx = gameState.player.x - this.x;
+                const dy = gameState.player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
+                    gameState.player.takeDamage(this.damage);
+                    this.lastAttack = 0;
+                }
+            }
+
+            teleport() {
+                this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
+                this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
+                
+                // Criar poça de matéria negra no local do teleporte
+                const pool = new DarkMatterPool(this.x, this.y);
+                gameState.particles.push(pool);
+                
+                createParticles(this.x, this.y, 20, '#8e44ad');
+            }
+
+            shootDarkMatter() {
+                for (let i = 0; i < 70; i++) {
+                    const angle = (i / 70) * Math.PI * 2;
+                    const projectile = new DarkMatterProjectile(
+                        this.x + Math.cos(angle) * this.radius,
+                        this.y + Math.sin(angle) * this.radius,
+                        angle
+                    );
+                    gameState.shurikens.push(projectile);
+                }
+            }
+
+            spawnEnemy() {
+                let type = 'weak';
+                const rand = Math.random();
+                
+                if (rand < 0.1) {
+                    type = 'assassin';
+                    this.spawnInterval = 6000;
+                } else if (rand < 0.3) {
+                    type = 'tank';
+                    this.spawnInterval = 5000;
+                } else if (rand < 0.5) {
+                    type = 'elite';
+                    this.spawnInterval = 4000;
+                } else if (rand < 0.7) {
+                    type = 'strong';
+                    this.spawnInterval = 3000;
+                } else if (rand < 0.9) {
+                    type = 'medium';
+                    this.spawnInterval = 2000;
+                } else {
+                    type = 'weak';
+                    this.spawnInterval = 1000;
+                }
+                
+                const angle = Math.random() * Math.PI * 2;
+                const distance = this.radius * 0.8;
+                
+                const enemy = new Enemy(
+                    this.x + Math.cos(angle) * distance,
+                    this.y + Math.sin(angle) * distance,
+                    type
+                );
+                
+                gameState.enemies.push(enemy);
+            }
+
+            spawnMinions() {
+                for (let i = 0; i < 4; i++) {
+                    const angle = (i / 4) * Math.PI * 2;
+                    const distance = 150;
+                    
+                    const minion = {
+                        x: this.x + Math.cos(angle) * distance,
+                        y: this.y + Math.sin(angle) * distance,
+                        radius: 15,
+                        color: '#5b2c6f'
+                    };
+                    
+                    this.minions.push(minion);
+                    createParticles(minion.x, minion.y, 10, '#8e44ad');
+                }
+            }
+
+            minionsAttack() {
+                for (const minion of this.minions) {
+                    const angle = Math.atan2(
+                        gameState.player.y - minion.y,
+                        gameState.player.x - minion.x
+                    );
+                    
+                    const projectile = new DarkMatterProjectile(
+                        minion.x,
+                        minion.y,
+                        angle
+                    );
+                    projectile.radius = 8;
+                    projectile.damage = 5;
+                    projectile.speed = 6;
+                    
+                    gameState.shurikens.push(projectile);
+                }
+            }
+
+            takeDamage(amount) {
+                const damageTaken = amount * (1 - this.defense);
+                this.health -= damageTaken;
+                
+                if (this.health <= 0) {
+                    gameState.omegaBossActive = false;
+                    gameState.score += this.xpValue;
+                    gameState.xp += this.xpValue;
+                    gameState.bossSpawned = false;
+                    gameState.spawnTimer = 0;
+                    return true;
+                }
+                
+                this.defense = Math.min(0.7, (1 - (this.health / this.maxHealth)) * 0.7);
+                return false;
+            }
+
+            draw(ctx) {
+                // Corpo
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, this.radius * 0.5,
+                    this.x, this.y, this.radius
+                );
+                gradient.addColorStop(0, '#5b2c6f');
+                gradient.addColorStop(1, '#2c3e50');
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // Olhos bravos
+                ctx.beginPath();
+                ctx.moveTo(this.x - this.radius * 0.3, this.y - this.radius * 0.2);
+                ctx.lineTo(this.x - this.radius * 0.1, this.y - this.radius * 0.3);
+                ctx.lineTo(this.x - this.radius * 0.2, this.y - this.radius * 0.1);
+                ctx.closePath();
+                
+                ctx.moveTo(this.x + this.radius * 0.3, this.y - this.radius * 0.2);
+                ctx.lineTo(this.x + this.radius * 0.1, this.y - this.radius * 0.3);
+                ctx.lineTo(this.x + this.radius * 0.2, this.y - this.radius * 0.1);
+                ctx.closePath();
+                
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                
+                // Boca brava
+                ctx.beginPath();
+                ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.3, 0.1, Math.PI - 0.1);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Desenhar minions se existirem
+                if (this.minionSpawned) {
+                    for (const minion of this.minions) {
+                        ctx.beginPath();
+                        ctx.arc(minion.x, minion.y, minion.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = minion.color;
+                        ctx.fill();
+                    }
+                }
+                
+                // Barra de vida
+                if (this.health < this.maxHealth) {
+                    const healthPercent = this.health / this.maxHealth;
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(this.x - this.radius, this.y - this.radius - 15, this.radius * 2 * healthPercent, 5);
+                }
             }
         }
 
@@ -1625,8 +1947,6 @@
             ]
         ];
 
-
-       
         function init() {
             gameState.canvas = document.getElementById('gameCanvas');
             gameState.ctx = gameState.canvas.getContext('2d');
@@ -1711,6 +2031,7 @@
             gameState.shocked = false;
             gameState.shockTimer = 0;
             gameState.miniDragonTimer = 0;
+            gameState.omegaBossActive = false;
             
             config.shurikenSpeed = 10;
             config.shurikenCooldown = 350;
@@ -1803,9 +2124,23 @@
                     
                     if (dist < shuriken.radius + gameState.player.radius) {
                         gameState.player.takeDamage(shuriken.damage);
-                        gameState.player.applyBurn(5, 3000);
+                        gameState.player.applyBurn(5, 2000); // Duração reduzida para 2 segundos
                         gameState.shurikens.splice(i, 1);
                         createParticles(shuriken.x, shuriken.y, 10, '#f80');
+                        continue;
+                    }
+                }
+                
+                if (shuriken instanceof DarkMatterProjectile) {
+                    const dx = shuriken.x - gameState.player.x;
+                    const dy = shuriken.y - gameState.player.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < shuriken.radius + gameState.player.radius) {
+                        gameState.player.takeDamage(shuriken.damage);
+                        gameState.player.applySlow(0.3, 3000);
+                        gameState.shurikens.splice(i, 1);
+                        createParticles(shuriken.x, shuriken.y, 10, '#8e44ad');
                         continue;
                     }
                 }
@@ -1962,7 +2297,7 @@
             for (let i = gameState.particles.length - 1; i >= 0; i--) {
                 const particle = gameState.particles[i];
                 
-                if (particle instanceof ToxicCloud) {
+                if (particle instanceof ToxicCloud || particle instanceof DarkMatterPool) {
                     particle.update(deltaTime);
                     if (particle.lifetime <= 0) {
                         gameState.particles.splice(i, 1);
@@ -1978,7 +2313,7 @@
             gameState.spawnTimer += deltaTime;
             const spawnRate = Math.max(500, config.enemySpawnRate - gameState.wave * 50);
             
-            if (gameState.spawnTimer >= spawnRate && !gameState.bossActive) {
+            if (gameState.spawnTimer >= spawnRate && !gameState.bossActive && !gameState.omegaBossActive) {
                 spawnEnemy();
                 gameState.spawnTimer = 0;
             }
@@ -1988,10 +2323,16 @@
                 nextWave();
             }
             
-           
-            if (!gameState.bossActive && !gameState.bossSpawned && gameState.wave % 5 === 0) {
+            if (!gameState.bossActive && !gameState.bossSpawned && gameState.wave % 5 === 0 && gameState.wave < 20) {
                 spawnBoss();
                 gameState.bossSpawned = true;
+            }
+            
+           
+            if (gameState.wave === 20 && !gameState.omegaBossActive && !gameState.bossSpawned) {
+                spawnOmegaBoss();
+                gameState.bossSpawned = true;
+                gameState.omegaBossActive = true;
             }
             
             if (gameState.xp >= gameState.xpToLevel && gameState.level < 11) {
@@ -2001,7 +2342,7 @@
             if (gameState.healthRegen) {
                 gameState.player.health = Math.min(
                     gameState.player.maxHealth,
-                    gameState.player.health + gameState.player.maxHealth * 0.01 * (deltaTime / 1000)
+                    gameState.player.health + gameState.player.maxHealth * 0.08 * (deltaTime / 1000)
                 );
             }
             
@@ -2037,7 +2378,7 @@
             
             if (gameState.wave >= 15 && rand < 0.1) {
                 type = 'thunder';
-            } else if (gameState.wave >= 11 && rand < 0.8) {
+            } else if (gameState.wave >= 11 && rand < 0.2) {
                 type = 'assassin';
             } else if (gameState.wave >= 9 && rand < 0.3) {
                 type = 'tank';
@@ -2079,10 +2420,19 @@
             gameState.bossActive = true;
             
             const bossTypes = ['dragon', 'oni', 'shadow', 'thunder'];
-           
             const randomType = bossTypes[Math.floor(Math.random() * bossTypes.length)];
             
             const boss = new Boss(randomType);
+            gameState.bosses.push(boss);
+            
+            document.getElementById('boss-health').style.display = 'block';
+            document.getElementById('boss-name').textContent = boss.name;
+        }
+
+        function spawnOmegaBoss() {
+            gameState.bossActive = true;
+            
+            const boss = new OmegaBoss();
             gameState.bosses.push(boss);
             
             document.getElementById('boss-health').style.display = 'block';
@@ -2297,7 +2647,7 @@
             }
             
             gameState.particles.forEach(p => {
-                if (p instanceof ToxicCloud) {
+                if (p instanceof ToxicCloud || p instanceof DarkMatterPool) {
                     p.draw(gameState.ctx);
                 } else {
                     p.draw(gameState.ctx);
