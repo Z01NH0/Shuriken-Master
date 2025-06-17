@@ -254,7 +254,15 @@
             shockTimer: 0,
             shockDuration: 3000,
             miniDragonTimer: 0,
-            omegaBossActive: false
+            omegaBossActive: false,
+            damageMultiplier: 1,
+            furyStacks: 0,
+            lastMeditationHeal: 0,
+            lastStandStillTime: 0,
+            isStandingStill: false,
+            dragonFuryActive: false,
+            dragonFuryEndTime: 0,
+            lastOmniSlashTime: 0
         };
 
         class Player {
@@ -272,6 +280,7 @@
                 this.slowed = false;
                 this.slowTimer = 0;
                 this.originalSpeed = this.speed;
+                this.lastMoveTime = 0;
             }
 
             update(deltaTime) {
@@ -282,6 +291,16 @@
                 if (gameState.keys['KeyS']) moveY += 1;
                 if (gameState.keys['KeyA']) moveX -= 1;
                 if (gameState.keys['KeyD']) moveX += 1;
+
+                if (moveX !== 0 || moveY !== 0) {
+                    this.lastMoveTime = Date.now();
+                    gameState.isStandingStill = false;
+                } else {
+                    if (!gameState.isStandingStill) {
+                        gameState.lastStandStillTime = Date.now();
+                        gameState.isStandingStill = true;
+                    }
+                }
 
                 if (moveX !== 0 && moveY !== 0) {
                     moveX *= 0.7071;
@@ -420,12 +439,15 @@
                 this.angle = angle;
                 this.speed = config.shurikenSpeed;
                 this.radius = 8;
-                this.damage = 11;
+                this.damage = 11 * gameState.damageMultiplier;
                 this.lifetime = 2000;
                 this.piercing = false;
                 this.explosive = false;
-                this.electric = false;
+                this.ice = false;
                 this.atomic = false;
+                this.stone = false;
+                this.critical = false;
+                this.pinkPiercing = false;
             }
 
             update(deltaTime) {
@@ -451,12 +473,18 @@
                 if (this.explosive) {
                     fillColor = '#f80';
                     strokeColor = '#f00';
-                } else if (this.electric) {
+                } else if (this.ice) {
                     fillColor = '#0ff';
                     strokeColor = '#00f';
                 } else if (this.atomic) {
                     fillColor = '#f0f';
                     strokeColor = '#0f0';
+                } else if (this.stone) {
+                    fillColor = '#8B4513';
+                    strokeColor = '#A0522D';
+                } else if (this.pinkPiercing) {
+                    fillColor = '#FF69B4';
+                    strokeColor = '#FF1493';
                 }
                 
                 ctx.beginPath();
@@ -467,7 +495,13 @@
                 ctx.closePath();
                 ctx.fillStyle = fillColor;
                 ctx.fill();
-                ctx.strokeStyle = strokeColor;
+                
+                if (this.critical) {
+                    ctx.strokeStyle = '#f00';
+                } else {
+                    ctx.strokeStyle = strokeColor;
+                }
+                
                 ctx.lineWidth = 1;
                 ctx.stroke();
                 
@@ -566,9 +600,20 @@
                 this.directionChangeTimer = 0;
                 this.directionChangeInterval = 900;
                 this.angle = Math.random() * Math.PI * 2;
+                this.stunned = false;
+                this.stunTimer = 0;
+                this.stunDuration = 0;
             }
 
             update(deltaTime) {
+                if (this.stunned) {
+                    this.stunTimer += deltaTime;
+                    if (this.stunTimer >= this.stunDuration) {
+                        this.stunned = false;
+                    }
+                    return;
+                }
+                
                 this.directionChangeTimer += deltaTime;
                 this.lastAttack += deltaTime;
                 
@@ -600,6 +645,17 @@
                 ctx.fillStyle = this.color;
                 ctx.fill();
                 
+                if (this.stunned) {
+                    for (let i = 0; i < 5; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * this.radius * 1.5;
+                        ctx.beginPath();
+                        ctx.arc(this.x + Math.cos(angle) * dist, this.y + Math.sin(angle) * dist, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = '#fff';
+                        ctx.fill();
+                    }
+                }
+                
                 ctx.beginPath();
                 ctx.moveTo(this.x - this.radius * 0.7, this.y);
                 ctx.lineTo(this.x - this.radius * 1.5, this.y - this.radius * 0.8);
@@ -622,6 +678,12 @@
             takeDamage(amount) {
                 this.health -= amount;
                 return this.health <= 0;
+            }
+            
+            applyStun(duration) {
+                this.stunned = true;
+                this.stunTimer = 0;
+                this.stunDuration = duration;
             }
         }
 
@@ -803,6 +865,13 @@
                 this.originalSpeed = this.speed;
                 this.defense = 0;
                 this.poison = null;
+                this.burn = null;
+                this.stunned = false;
+                this.stunTimer = 0;
+                this.stunDuration = 0;
+                this.originalDamage = this.damage;
+                this.iceSlowTimer = 0;
+                this.iceSlowDuration = 2000;
                 
                 this.explosionHitbox = new ExplosionHitbox(this.x, this.y, this.radius * 1.5);
                 gameState.explosionHitboxes.push(this.explosionHitbox);
@@ -872,12 +941,31 @@
                 this.health *= waveMultiplier;
                 this.maxHealth = this.health;
                 this.originalSpeed = this.speed;
+                this.originalDamage = this.damage;
             }
 
             update(deltaTime) {
+                if (this.stunned) {
+                    this.stunTimer += deltaTime;
+                    if (this.stunTimer >= this.stunDuration) {
+                        this.stunned = false;
+                    }
+                    return;
+                }
+                
                 this.explosionHitbox.x = this.x;
                 this.explosionHitbox.y = this.y;
                 this.lastAttack += deltaTime;
+                
+                if (this.iceSlowTimer > 0) {
+                    this.iceSlowTimer -= deltaTime;
+                    if (this.iceSlowTimer <= 0) {
+                        this.speed = this.originalSpeed;
+                        this.color = this.type === 'weak' ? '#f88' : 
+                                     this.type === 'medium' ? '#f55' : 
+                                     this.type === 'strong' ? '#f00' : '#c00';
+                    }
+                }
                 
                 if (this.slowed) {
                     this.slowTimer += deltaTime;
@@ -899,6 +987,22 @@
                     }
                     if (this.poison.timer >= this.poison.duration) {
                         this.poison = null;
+                        this.color = this.type === 'weak' ? '#f88' : 
+                                     this.type === 'medium' ? '#f55' : 
+                                     this.type === 'strong' ? '#f00' : '#c00';
+                        this.damage = this.originalDamage;
+                    }
+                }
+                
+                if (this.burn) {
+                    this.burn.timer += deltaTime;
+                    if (this.burn.timer >= 700) {
+                        this.takeDamage(this.burn.damage);
+                        this.burn.timer = 0;
+                        createParticles(this.x, this.y, 2, '#f80');
+                    }
+                    if (this.burn.timer >= this.burn.duration) {
+                        this.burn = null;
                         this.color = this.type === 'weak' ? '#f88' : 
                                      this.type === 'medium' ? '#f55' : 
                                      this.type === 'strong' ? '#f00' : '#c00';
@@ -964,6 +1068,15 @@
                 this.slowed = true;
             }
 
+            applyIceSlow() {
+                if (this.isBoss) return;
+                
+                this.iceSlowTimer = this.iceSlowDuration;
+                this.slowAmount = Math.min(0.6, this.slowAmount + 0.1);
+                this.speed = this.originalSpeed * (1 - this.slowAmount);
+                this.color = '#0ff';
+            }
+
             takeDamage(amount) {
                 const damageTaken = amount * (1 - this.defense);
                 this.health -= damageTaken;
@@ -972,7 +1085,19 @@
                     this.defense = Math.min(0.7, (1 - (this.health / this.maxHealth)) * 0.7);
                 }
                 
-                return this.health <= 0;
+                if (this.health <= 0) {
+                    if (this.burn && this.burn.damage >= this.health) {
+                        createParticles(this.x, this.y, 15, '#f80');
+                    }
+                    return true;
+                }
+                return false;
+            }
+            
+            applyStun(duration) {
+                this.stunned = true;
+                this.stunTimer = 0;
+                this.stunDuration = duration;
             }
 
             draw(ctx) {
@@ -980,6 +1105,17 @@
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.fill();
+                
+                if (this.stunned) {
+                    for (let i = 0; i < 5; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * this.radius * 1.5;
+                        ctx.beginPath();
+                        ctx.arc(this.x + Math.cos(angle) * dist, this.y + Math.sin(angle) * dist, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = '#fff';
+                        ctx.fill();
+                    }
+                }
                 
                 if (this.type === 'assassin') {
                     ctx.beginPath();
@@ -1420,24 +1556,27 @@
                 let type = 'weak';
                 const rand = Math.random();
                 
-                if (rand < 0.1) {
-                    type = 'assassin';
+                if (gameState.wave >= 15 && rand < 0.1) {
+                    type = 'thunder';
                     this.spawnInterval = 6000;
-                } else if (rand < 0.3) {
-                    type = 'tank';
+                } else if (gameState.wave >= 11 && rand < 0.2) {
+                    type = 'assassin';
                     this.spawnInterval = 5000;
-                } else if (rand < 0.5) {
-                    type = 'elite';
+                } else if (gameState.wave >= 9 && rand < 0.3) {
+                    type = 'tank';
                     this.spawnInterval = 4000;
-                } else if (rand < 0.7) {
-                    type = 'strong';
+                } else if (gameState.wave >= 7 && rand < 0.2) {
+                    type = 'elite';
                     this.spawnInterval = 3000;
-                } else if (rand < 0.9) {
-                    type = 'medium';
+                } else if (gameState.wave >= 4 && rand < 0.4) {
+                    type = 'strong';
                     this.spawnInterval = 2000;
+                } else if (gameState.wave >= 2 && rand < 0.6) {
+                    type = 'medium';
+                    this.spawnInterval = 1000;
                 } else {
                     type = 'weak';
-                    this.spawnInterval = 1000;
+                    this.spawnInterval = 500;
                 }
                 
                 const angle = Math.random() * Math.PI * 2;
@@ -1625,54 +1764,39 @@
                         Enemy.prototype.takeDamage = function(amount) {
                             const died = originalTakeDamage.call(this, amount);
                             if (!died && !this.isBoss) {
-                                this.burn = { damage: amount * 0.33, duration: 3000, timer: 0 };
+                                this.burn = { damage: amount * 0.5, duration: 3000, timer: 0 };
+                                this.color = '#f80';
                             }
                             return died;
+                        };
+                    }
+                },
+                {
+                    name: "Shurikens de Pedra",
+                    description: "10% de chance de nocautear os inimigos por 2.5 segundos",
+                    apply: () => {
+                        Shuriken.prototype.stone = true;
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            if (Math.random() < 0.1 && !this.isBoss) {
+                                this.applyStun(2500);
+                                createParticles(this.x, this.y, 10, '#fff');
+                            }
+                            return originalTakeDamage.call(this, amount);
                         };
                     }
                 },
                 {
                     name: "Shurikens de Gelo",
-                    description: "Shurikens reduzem velocidade dos inimigos",
+                    description: "Shurikens dão slow de 10% nos inimigos (máx 60%) por 2 segundos",
                     apply: () => {
+                        Shuriken.prototype.ice = true;
                         const originalTakeDamage = Enemy.prototype.takeDamage;
                         Enemy.prototype.takeDamage = function(amount) {
                             const died = originalTakeDamage.call(this, amount);
                             if (!died && !this.isBoss) {
-                                this.applySlow(0.15);
-                            }
-                            return died;
-                        };
-                    }
-                },
-                {
-                    name: "Shurikens Elétricas",
-                    description: "Shurikens dão choque em cadeia para 2 inimigos próximos",
-                    apply: () => {
-                        Shuriken.prototype.electric = true;
-                        const originalTakeDamage = Enemy.prototype.takeDamage;
-                        Enemy.prototype.takeDamage = function(amount) {
-                            const died = originalTakeDamage.call(this, amount);
-                            if (died && !this.isBoss) {
-                                let targets = [];
-                                for (const enemy of gameState.enemies) {
-                                    if (enemy !== this) {
-                                        const dist = Math.sqrt(
-                                            Math.pow(enemy.x - this.x, 2) + 
-                                            Math.pow(enemy.y - this.y, 2)
-                                        );
-                                        if (dist < 150) {
-                                            targets.push({ enemy, dist });
-                                        }
-                                    }
-                                }
-                                targets.sort((a, b) => a.dist - b.dist);
-                                targets = targets.slice(0, 2);
-                                
-                                for (const target of targets) {
-                                    createLightning(this.x, this.y, target.enemy.x, target.enemy.y);
-                                    target.enemy.takeDamage(amount * 0.5);
-                                }
+                                this.applyIceSlow();
+                                createParticles(this.x, this.y, 3, '#0ff');
                             }
                             return died;
                         };
@@ -1685,6 +1809,7 @@
                     description: "30% de chance de lançar uma shuriken que explode ao matar inimigos",
                     apply: () => {
                         gameState.atomicShurikenChance = 0.3;
+                        Shuriken.prototype.damage = 11 * 1.4 * gameState.damageMultiplier;
                     }
                 },
                 {
@@ -1696,18 +1821,38 @@
                 },
                 {
                     name: "Furia Vingativa",
-                    description: "Ganha uma pequena velocidade de ataque ao matar inimigos",
+                    description: "Aumenta cadência de tiro ao acertar inimigos",
                     apply: () => {
-                        gameState.ninjaDash = true;
+                        gameState.furyStacks = 0;
+                        const originalTakeDamage = Enemy.prototype.takeDamage;
+                        Enemy.prototype.takeDamage = function(amount) {
+                            const died = originalTakeDamage.call(this, amount);
+                            if (!died) {
+                                gameState.furyStacks = Math.min(40, gameState.furyStacks + 3);
+                                config.shurikenCooldown = Math.max(100, 450 * (1 - gameState.furyStacks/100));
+                            }
+                            return died;
+                        };
                     }
                 }
             ],
             [
                 {
                     name: "Shurikens Perfurantes",
-                    description: "Shurikens podem acertar múltiplos inimigos",
+                    description: "50% de chance de lançar projéteis perfurantes",
                     apply: () => {
-                        Shuriken.prototype.piercing = true;
+                        const originalThrowShuriken = throwShuriken;
+                        throwShuriken = (x, y, angle) => {
+                            if (Math.random() < 0.5) {
+                                const shuriken = new Shuriken(x, y, angle);
+                                shuriken.pinkPiercing = true;
+                                shuriken.damage = 11 * 0.7 * gameState.damageMultiplier;
+                                shuriken.speed = config.shurikenSpeed * 1.3;
+                                gameState.shurikens.push(shuriken);
+                            } else {
+                                originalThrowShuriken(x, y, angle);
+                            }
+                        };
                     }
                 },
                 {
@@ -1760,20 +1905,22 @@
                 },
                 {
                     name: "Meditação",
-                    description: "Regenera vida por segundo",
+                    description: "Regenera vida quando parado por 2 segundos",
                     apply: () => {
                         gameState.healthRegen = true;
+                        gameState.lastMeditationHeal = 0;
                     }
                 },
                 {
                     name: "Profissional em Pontos Vitais",
-                    description: "20% de chance de causar dano duplo",
+                    description: "10% de chance de causar dano duplo",
                     apply: () => {
                         const originalTakeDamage = Enemy.prototype.takeDamage;
                         Enemy.prototype.takeDamage = function(amount) {
-                            if (Math.random() < 0.2) {
+                            if (Math.random() < 0.1) {
                                 amount *= 2;
                                 createParticles(this.x, this.y, 10, '#ff0');
+                                return originalTakeDamage.call(this, amount);
                             }
                             return originalTakeDamage.call(this, amount);
                         };
@@ -1783,14 +1930,14 @@
             [
                 {
                     name: "Shurikens Vampíricas",
-                    description: "Cura 10% do dano causado",
+                    description: "Cura 3% do dano causado",
                     apply: () => {
                         const originalTakeDamage = Enemy.prototype.takeDamage;
                         Enemy.prototype.takeDamage = function(amount) {
                             const died = originalTakeDamage.call(this, amount);
                             gameState.player.health = Math.min(
                                 gameState.player.maxHealth,
-                                gameState.player.health + amount * 0.1
+                                gameState.player.health + amount * 0.03
                             );
                             return died;
                         };
@@ -1798,14 +1945,14 @@
                 },
                 {
                     name: "Mestre do Desespero",
-                    description: "Inimigos ficam mais lentos quando sua vida está baixa",
+                    description: "Fica 50% mais rápido quando vida está baixa",
                     apply: () => {
                         gameState.timeSlow = true;
                     }
                 },
                 {
                     name: "Último Esforço",
-                    description: "Dano dobrado quando vida está abaixo de 20%",
+                    description: "Dano dobrado quando vida está abaixo de 35%",
                     apply: () => {
                         gameState.finalGambit = true;
                     }
@@ -1835,12 +1982,20 @@
                 },
                 {
                     name: "Flash Step",
-                    description: "30% de chance de evitar dano teleportando",
+                    description: "20% de chance de evitar dano teletransportando",
                     apply: () => {
                         const originalTakeDamage = Player.prototype.takeDamage;
                         Player.prototype.takeDamage = function(amount) {
-                            if (Math.random() < 0.3) {
+                            if (Math.random() < 0.2) {
+                                const angle = Math.random() * Math.PI * 2;
+                                const distance = 100;
+                                this.x += Math.cos(angle) * distance;
+                                this.y += Math.sin(angle) * distance;
                                 createParticles(this.x, this.y, 10, '#888');
+                                this.invincible = true;
+                                setTimeout(() => {
+                                    this.invincible = false;
+                                }, 400);
                                 return;
                             }
                             originalTakeDamage.call(this, amount);
@@ -1849,16 +2004,22 @@
                 },
                 {
                     name: "Fúria do Dragão",
-                    description: "Todas as shurikens ganham efeito de fogo",
+                    description: "Chance de ficar mais rápido e atirar mais rápido",
                     apply: () => {
-                        const originalTakeDamage = Enemy.prototype.takeDamage;
-                        Enemy.prototype.takeDamage = function(amount) {
-                            const died = originalTakeDamage.call(this, amount);
-                            if (!died && !this.isBoss) {
-                                this.burn = { damage: amount * 0.3, duration: 3000, timer: 0 };
+                        gameState.dragonFuryActive = false;
+                        setInterval(() => {
+                            if (Math.random() < 0.15 && !gameState.dragonFuryActive) {
+                                gameState.dragonFuryActive = true;
+                                gameState.dragonFuryEndTime = Date.now() + 4000;
+                                gameState.player.speed *= 1.4;
+                                config.shurikenCooldown *= 0.4;
+                                setTimeout(() => {
+                                    gameState.player.speed /= 1.4;
+                                    config.shurikenCooldown /= 0.4;
+                                    gameState.dragonFuryActive = false;
+                                }, 4000);
                             }
-                            return died;
-                        };
+                        }, 5000);
                     }
                 }
             ],
@@ -1873,6 +2034,7 @@
                             if (!died && !this.isBoss) {
                                 this.poison = { damage: amount * 0.33, duration: 2000, timer: 0 };
                                 this.color = '#0f0';
+                                this.damage = this.originalDamage * 0.7;
                             }
                             return died;
                         };
@@ -1886,10 +2048,23 @@
                     }
                 },
                 {
-                    name: "Reflexos Ninja",
-                    description: "Desvia de projéteis lançados automaticamente",
+                    name: "Com Todos os Membros",
+                    description: "Joga shurikens em todas as direções periodicamente",
                     apply: () => {
-                        gameState.dodgeChance = 0.4;
+                        gameState.lastOmniSlashTime = 0;
+                        setInterval(() => {
+                            if (Date.now() - gameState.lastOmniSlashTime >= 10000) {
+                                gameState.lastOmniSlashTime = Date.now();
+                                for (let i = 0; i < 40; i++) {
+                                    const angle = (i / 40) * Math.PI * 2;
+                                    throwShuriken(
+                                        gameState.player.x,
+                                        gameState.player.y,
+                                        angle
+                                    );
+                                }
+                            }
+                        }, 1000);
                     }
                 }
             ],
@@ -1903,14 +2078,14 @@
                 },
                 {
                     name: "Sede de Sangue",
-                    description: "Ganha velocidade de ataque ao matar inimigos",
+                    description: "Regenera 8% de vida ao matar inimigos",
                     apply: () => {
                         gameState.bloodlust = true;
                     }
                 },
                 {
                     name: "O Ultimo Suspiro",
-                    description: "Triplo de dano quando vida está abaixo de 20%",
+                    description: "Triplo de dano quando vida está abaixo de 35%",
                     apply: () => {
                         gameState.finalGambit = true;
                     }
@@ -1934,7 +2109,7 @@
                 },
                 {
                     name: "Zênite",
-                    description: "Todos os atributos aumentados em 25%",
+                    description: "Todos os atributos aumentados em 70%",
                     apply: () => {
                         config.shurikenSpeed *= 1.70;
                         Shuriken.prototype.damage *= 1.70;
@@ -2012,7 +2187,7 @@
             gameState.bosses = [];
             gameState.particles = [];
             gameState.explosionHitboxes = [];
-            gameState.wave = 1;
+            gameState.wave = 20;
             gameState.waveTimer = 0;
             gameState.score = 0;
             gameState.xp = 0;
@@ -2032,6 +2207,14 @@
             gameState.shockTimer = 0;
             gameState.miniDragonTimer = 0;
             gameState.omegaBossActive = false;
+            gameState.damageMultiplier = 1;
+            gameState.furyStacks = 0;
+            gameState.lastMeditationHeal = 0;
+            gameState.lastStandStillTime = 0;
+            gameState.isStandingStill = false;
+            gameState.dragonFuryActive = false;
+            gameState.dragonFuryEndTime = 0;
+            gameState.lastOmniSlashTime = 0;
             
             config.shurikenSpeed = 10;
             config.shurikenCooldown = 350;
@@ -2039,8 +2222,11 @@
             Shuriken.prototype.radius = 8;
             Shuriken.prototype.piercing = false;
             Shuriken.prototype.explosive = false;
-            Shuriken.prototype.electric = false;
+            Shuriken.prototype.ice = false;
             Shuriken.prototype.atomic = false;
+            Shuriken.prototype.stone = false;
+            Shuriken.prototype.critical = false;
+            Shuriken.prototype.pinkPiercing = false;
             
             gameState.healthRegen = false;
             gameState.timeSlow = false;
@@ -2100,6 +2286,43 @@
         function updateGame(deltaTime) {
             gameState.player.update(deltaTime);
             
+            // Aumento de dano a cada 5 níveis
+            if (gameState.level % 5 === 0 && gameState.damageMultiplier < 1 + (Math.floor(gameState.level / 5) * 0.2)) {
+                gameState.damageMultiplier = 1 + (Math.floor(gameState.level / 5) * 0.2);
+                Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
+            }
+            
+            // Meditação - cura quando parado
+            if (gameState.healthRegen && gameState.isStandingStill) {
+                const now = Date.now();
+                if (now - gameState.lastMeditationHeal >= 2000) {
+                    gameState.player.health = Math.min(
+                        gameState.player.maxHealth,
+                        gameState.player.health + gameState.player.maxHealth * 0.1
+                    );
+                    createParticles(gameState.player.x, gameState.player.y, 10, '#ff0');
+                    gameState.lastMeditationHeal = now;
+                }
+            }
+            
+            // Mestre do Desespero - mais rápido com vida baixa
+            if (gameState.timeSlow) {
+                if (gameState.player.health <= gameState.player.maxHealth * 0.35) {
+                    gameState.player.speed = gameState.player.originalSpeed * 1.5;
+                } else {
+                    gameState.player.speed = gameState.player.originalSpeed;
+                }
+            }
+            
+            // Último Esforço - mais dano com vida baixa
+            if (gameState.finalGambit) {
+                if (gameState.player.health <= gameState.player.maxHealth * 0.35) {
+                    Shuriken.prototype.damage = 11 * gameState.damageMultiplier * 2;
+                } else {
+                    Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
+                }
+            }
+            
             gameState.shurikenTimer += deltaTime;
             if (gameState.mouse.isDown && gameState.shurikenTimer >= config.shurikenCooldown) {
                 throwShuriken(
@@ -2124,7 +2347,7 @@
                     
                     if (dist < shuriken.radius + gameState.player.radius) {
                         gameState.player.takeDamage(shuriken.damage);
-                        gameState.player.applyBurn(5, 2000); // Duração reduzida para 2 segundos
+                        gameState.player.applyBurn(5, 2000);
                         gameState.shurikens.splice(i, 1);
                         createParticles(shuriken.x, shuriken.y, 10, '#f80');
                         continue;
@@ -2136,6 +2359,7 @@
                     const dy = shuriken.y - gameState.player.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     
+                    // Apenas colide com o jogador
                     if (dist < shuriken.radius + gameState.player.radius) {
                         gameState.player.takeDamage(shuriken.damage);
                         gameState.player.applySlow(0.3, 3000);
@@ -2165,13 +2389,13 @@
                             createExplosion(shuriken.x, shuriken.y, 50, shuriken.damage * 0.8);
                         }
                         
+                        if (shuriken.atomic && died) {
+                            createExplosion(enemy.x, enemy.y, 80, shuriken.damage * 0.5);
+                        }
+                        
                         if (died) {
                             gameState.score += enemy.xpValue;
                             gameState.xp += enemy.xpValue;
-                            
-                            if (shuriken.atomic) {
-                                createExplosion(enemy.x, enemy.y, 80, shuriken.damage * 0.5);
-                            }
                             
                             createParticles(
                                 enemy.x,
@@ -2179,13 +2403,6 @@
                                 15,
                                 enemy.color
                             );
-                            
-                            if (gameState.ninjaDash) {
-                                gameState.player.health = Math.min(
-                                    gameState.player.maxHealth,
-                                    gameState.player.health + 5
-                                );
-                            }
                             
                             if (gameState.shadowStep && Math.random() < 0.3) {
                                 const angle = Math.random() * Math.PI * 2;
@@ -2196,7 +2413,10 @@
                             }
                             
                             if (gameState.bloodlust) {
-                                config.shurikenCooldown = Math.max(100, config.shurikenCooldown * 0.95);
+                                gameState.player.health = Math.min(
+                                    gameState.player.maxHealth,
+                                    gameState.player.health + gameState.player.maxHealth * 0.08
+                                );
                             }
                             
                             if (gameState.toxicCloud) {
@@ -2210,10 +2430,47 @@
                             );
                         }
                         
-                        if (!shuriken.piercing) {
+                        if (!shuriken.piercing && !shuriken.pinkPiercing) {
                             gameState.shurikens.splice(i, 1);
                             break;
                         }
+                    }
+                }
+                
+                for (let j = gameState.bosses.length - 1; j >= 0; j--) {
+                    const boss = gameState.bosses[j];
+                    const dx = shuriken.x - boss.x;
+                    const dy = shuriken.y - boss.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < shuriken.radius + boss.radius) {
+                        const died = boss.takeDamage(shuriken.damage);
+                        
+                        createParticles(
+                            boss.x,
+                            boss.y,
+                            10,
+                            boss.color
+                        );
+                        
+                        if (died) {
+                            createParticles(
+                                boss.x,
+                                boss.y,
+                                30,
+                                boss.color
+                            );
+                            gameState.bosses.splice(j, 1);
+                            gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
+                                h => h !== boss.explosionHitbox
+                            );
+                        }
+                        
+                        if (!shuriken.piercing && !shuriken.pinkPiercing) {
+                            gameState.shurikens.splice(i, 1);
+                        }
+                        
+                        break;
                     }
                 }
                 
@@ -2228,8 +2485,8 @@
                 
                 if (enemy.burn) {
                     enemy.burn.timer += deltaTime;
-                    if (enemy.burn.timer >= 1000) {
-                        enemy.takeDamage(enemy.burn.damage);
+                    if (enemy.burn.timer >= 700) {
+                        const damageTaken = enemy.takeDamage(enemy.burn.damage);
                         enemy.burn.timer = 0;
                         createParticles(enemy.x, enemy.y, 2, '#f80');
                     }
@@ -2255,43 +2512,6 @@
             for (let i = gameState.bosses.length - 1; i >= 0; i--) {
                 const boss = gameState.bosses[i];
                 boss.update(deltaTime);
-                
-                for (let j = gameState.shurikens.length - 1; j >= 0; j--) {
-                    const shuriken = gameState.shurikens[j];
-                    const dx = shuriken.x - boss.x;
-                    const dy = shuriken.y - boss.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < shuriken.radius + boss.radius) {
-                        const died = boss.takeDamage(shuriken.damage);
-                        
-                        createParticles(
-                            boss.x,
-                            boss.y,
-                            10,
-                            boss.color
-                        );
-                        
-                        if (died) {
-                            createParticles(
-                                boss.x,
-                                boss.y,
-                                30,
-                                boss.color
-                            );
-                            gameState.bosses.splice(i, 1);
-                            gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
-                                h => h !== boss.explosionHitbox
-                            );
-                        }
-                        
-                        if (!shuriken.piercing) {
-                            gameState.shurikens.splice(j, 1);
-                        }
-                        
-                        break;
-                    }
-                }
             }
             
             for (let i = gameState.particles.length - 1; i >= 0; i--) {
@@ -2328,7 +2548,6 @@
                 gameState.bossSpawned = true;
             }
             
-           
             if (gameState.wave === 20 && !gameState.omegaBossActive && !gameState.bossSpawned) {
                 spawnOmegaBoss();
                 gameState.bossSpawned = true;
@@ -2337,35 +2556,6 @@
             
             if (gameState.xp >= gameState.xpToLevel && gameState.level < 11) {
                 showPowerUpSelection();
-            }
-            
-            if (gameState.healthRegen) {
-                gameState.player.health = Math.min(
-                    gameState.player.maxHealth,
-                    gameState.player.health + gameState.player.maxHealth * 0.08 * (deltaTime / 1000)
-                );
-            }
-            
-            if (gameState.timeSlow && gameState.player.health < gameState.player.maxHealth * 0.3) {
-                for (const enemy of gameState.enemies) {
-                    enemy.speed = enemy.originalSpeed * 0.5;
-                }
-            }
-            
-            if (gameState.omnislash && Math.random() < 0.005) {
-                for (let i = 0; i < 8; i++) {
-                    setTimeout(() => {
-                        throwShuriken(
-                            gameState.player.x,
-                            gameState.player.y,
-                            Math.random() * Math.PI * 2
-                        );
-                    }, i * 100);
-                }
-            }
-            
-            if (gameState.finalGambit && gameState.player.health < gameState.player.maxHealth * 0.2) {
-                Shuriken.prototype.damage = 30;
             }
             
             updateUI();
@@ -2498,6 +2688,23 @@
                         gameState.enemies.splice(i, 1);
                         gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
                             h => h !== enemy.explosionHitbox
+                        );
+                    }
+                }
+            }
+            
+            for (let i = gameState.bosses.length - 1; i >= 0; i--) {
+                const boss = gameState.bosses[i];
+                const dx = boss.x - x;
+                const dy = boss.y - y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < radius) {
+                    const died = boss.takeDamage(damage * (1 - dist / radius));
+                    if (died) {
+                        gameState.bosses.splice(i, 1);
+                        gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
+                            h => h !== boss.explosionHitbox
                         );
                     }
                 }
