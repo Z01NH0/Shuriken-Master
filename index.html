@@ -164,6 +164,11 @@
         .powerup-btn:hover {
             background-color: rgba(0, 255, 0, 0.2);
         }
+        .boss-image {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
     </style>
 </head>
 <body>
@@ -262,8 +267,27 @@
             isStandingStill: false,
             dragonFuryActive: false,
             dragonFuryEndTime: 0,
-            lastOmniSlashTime: 0
+            lastOmniSlashTime: 0,
+            bossImages: {}
         };
+
+        // Carregar imagens dos bosses (substitua pelas URLs reais das imagens)
+        function loadBossImages() {
+            gameState.bossImages = {
+                'dragon': new Image(),
+                'oni': new Image(),
+                'shadow': new Image(),
+                'thunder': new Image(),
+                'omega_boss': new Image()
+            };
+            
+            // Exemplo de URLs - substitua pelas suas imagens
+            gameState.bossImages['dragon'].src = 'https://via.placeholder.com/150/ff6600/000000?text=Dragon';
+            gameState.bossImages['oni'].src = 'https://via.placeholder.com/150/ff00ff/000000?text=Oni';
+            gameState.bossImages['shadow'].src = 'https://via.placeholder.com/150/0000ff/000000?text=Shadow';
+            gameState.bossImages['thunder'].src = 'https://via.placeholder.com/150/ffff00/000000?text=Thunder';
+            gameState.bossImages['omega_boss'].src = 'https://via.placeholder.com/150/5b2c6f/000000?text=Omega+Boss';
+        }
 
         class Player {
             constructor(x, y) {
@@ -1177,6 +1201,8 @@
                 this.lastFireBreath = 0;
                 this.miniDragonCooldown = 5000;
                 this.lastMiniDragon = 0;
+                this.image = null;
+                this.imageElement = null;
                 
                 switch(type) {
                     case 'dragon':
@@ -1219,6 +1245,16 @@
                 this.health *= waveMultiplier;
                 this.maxHealth = this.health;
                 
+                // Configurar imagem do boss
+                this.image = gameState.bossImages[type];
+                
+                // Criar elemento de imagem para o boss
+                this.imageElement = document.createElement('img');
+                this.imageElement.className = 'boss-image';
+                this.imageElement.src = this.image.src;
+                this.imageElement.style.width = `${this.radius * 3}px`;
+                this.imageElement.style.height = `${this.radius * 3}px`;
+                document.body.appendChild(this.imageElement);
                 
                 const side = Math.floor(Math.random() * 4);
                 switch(side) {
@@ -1243,6 +1279,12 @@
 
             update(deltaTime) {
                 super.update(deltaTime);
+                
+                // Atualizar posição da imagem
+                if (this.imageElement) {
+                    this.imageElement.style.left = `${this.x + gameState.canvas.offsetLeft}px`;
+                    this.imageElement.style.top = `${this.y + gameState.canvas.offsetTop}px`;
+                }
                 
                 this.lastAbility += deltaTime;
                 if (this.lastAbility >= this.abilityCooldown) {
@@ -1383,6 +1425,7 @@
             }
 
             draw(ctx) {
+                // Desenhar apenas a hitbox esférica sem face
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
@@ -1393,33 +1436,6 @@
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 3;
                 ctx.stroke();
-                
-                ctx.beginPath();
-                if (this.phase === 1) {
-                    ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.15, 0, Math.PI * 2);
-                    ctx.arc(this.x + this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.15, 0, Math.PI * 2);
-                } else {
-                    ctx.moveTo(this.x - this.radius * 0.4, this.y - this.radius * 0.2);
-                    ctx.lineTo(this.x - this.radius * 0.2, this.y - this.radius * 0.3);
-                    ctx.lineTo(this.x - this.radius * 0.3, this.y - this.radius * 0.1);
-                    ctx.closePath();
-                    
-                    ctx.moveTo(this.x + this.radius * 0.4, this.y - this.radius * 0.2);
-                    ctx.lineTo(this.x + this.radius * 0.2, this.y - this.radius * 0.3);
-                    ctx.lineTo(this.x + this.radius * 0.3, this.y - this.radius * 0.1);
-                    ctx.closePath();
-                }
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-                
-                ctx.beginPath();
-                if (this.phase === 1) {
-                    ctx.arc(this.x, this.y + this.radius * 0.1, this.radius * 0.3, 0, Math.PI);
-                } else {
-                    ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.4, 0.1, Math.PI - 0.1);
-                }
-                ctx.fillStyle = '#000';
-                ctx.fill();
                 
                 if (this.type === 'thunder' && this.phase === 2) {
                     ctx.beginPath();
@@ -1440,6 +1456,12 @@
                     gameState.xp += this.xpValue;
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
+                    
+                    // Remover elemento de imagem quando o boss morrer
+                    if (this.imageElement && this.imageElement.parentNode) {
+                        this.imageElement.parentNode.removeChild(this.imageElement);
+                    }
+                    
                     return true;
                 }
                 
@@ -1473,6 +1495,19 @@
                 this.minions = [];
                 this.minionAttackTimer = 0;
                 this.minionAttackInterval = 2000;
+                this.image = null;
+                this.imageElement = null;
+                
+                // Configurar imagem do Omega Boss
+                this.image = gameState.bossImages['omega_boss'];
+                
+                // Criar elemento de imagem para o Omega Boss
+                this.imageElement = document.createElement('img');
+                this.imageElement.className = 'boss-image';
+                this.imageElement.src = this.image.src;
+                this.imageElement.style.width = `${this.radius * 3}px`;
+                this.imageElement.style.height = `${this.radius * 3}px`;
+                document.body.appendChild(this.imageElement);
                 
                 // Posição inicial aleatória
                 this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
@@ -1480,6 +1515,14 @@
             }
 
             update(deltaTime) {
+                super.update(deltaTime);
+                
+                // Atualizar posição da imagem
+                if (this.imageElement) {
+                    this.imageElement.style.left = `${this.x + gameState.canvas.offsetLeft}px`;
+                    this.imageElement.style.top = `${this.y + gameState.canvas.offsetTop}px`;
+                }
+                
                 this.teleportTimer += deltaTime;
                 this.projectileTimer += deltaTime;
                 this.spawnTimer += deltaTime;
@@ -1638,6 +1681,12 @@
                     gameState.xp += this.xpValue;
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
+                    
+                    // Remover elemento de imagem quando o boss morrer
+                    if (this.imageElement && this.imageElement.parentNode) {
+                        this.imageElement.parentNode.removeChild(this.imageElement);
+                    }
+                    
                     return true;
                 }
                 
@@ -1646,7 +1695,7 @@
             }
 
             draw(ctx) {
-                // Corpo
+                // Desenhar apenas a hitbox esférica sem face
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 
@@ -1659,38 +1708,6 @@
                 
                 ctx.fillStyle = gradient;
                 ctx.fill();
-                
-                // Olhos bravos
-                ctx.beginPath();
-                ctx.moveTo(this.x - this.radius * 0.3, this.y - this.radius * 0.2);
-                ctx.lineTo(this.x - this.radius * 0.1, this.y - this.radius * 0.3);
-                ctx.lineTo(this.x - this.radius * 0.2, this.y - this.radius * 0.1);
-                ctx.closePath();
-                
-                ctx.moveTo(this.x + this.radius * 0.3, this.y - this.radius * 0.2);
-                ctx.lineTo(this.x + this.radius * 0.1, this.y - this.radius * 0.3);
-                ctx.lineTo(this.x + this.radius * 0.2, this.y - this.radius * 0.1);
-                ctx.closePath();
-                
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-                
-                // Boca brava
-                ctx.beginPath();
-                ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.3, 0.1, Math.PI - 0.1);
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                // Desenhar minions se existirem
-                if (this.minionSpawned) {
-                    for (const minion of this.minions) {
-                        ctx.beginPath();
-                        ctx.arc(minion.x, minion.y, minion.radius, 0, Math.PI * 2);
-                        ctx.fillStyle = minion.color;
-                        ctx.fill();
-                    }
-                }
                 
                 // Barra de vida
                 if (this.health < this.maxHealth) {
@@ -2113,7 +2130,7 @@
                     apply: () => {
                         config.shurikenSpeed *= 1.70;
                         Shuriken.prototype.damage *= 1.70;
-                        gameState.player.speed *= 1.25;
+                        gameState.player.speed *= 1.50;
                         gameState.player.maxHealth *= 1.70;
                         gameState.player.health *= 1.70;
                         config.shurikenCooldown *= 0.75;
@@ -2187,10 +2204,10 @@
             gameState.bosses = [];
             gameState.particles = [];
             gameState.explosionHitboxes = [];
-            gameState.wave = 20;
+            gameState.wave = 1;
             gameState.waveTimer = 0;
             gameState.score = 0;
-            gameState.xp = 0;
+            gameState.xp = 100000;
             gameState.xpToLevel = config.xpRequirements[0];
             gameState.level = 1;
             gameState.gameOver = false;
