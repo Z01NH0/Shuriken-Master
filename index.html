@@ -3,8 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shuriken Master </title>
+    <title>Shuriken Master</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Black+Ops+One&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
             padding: 0;
@@ -13,29 +21,219 @@
             background-color: #000;
             color: white;
         }
+        
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        #loading-bar {
+            width: 300px;
+            height: 20px;
+            border: 2px solid #ff0000;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        #loading-progress {
+            height: 100%;
+            width: 0%;
+            background-color: #ff0000;
+            transition: width 0.1s;
+        }
+        
+        #loading-text {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 0 0 10px #ff0000;
+        }
+        
+        #main-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        
+        #game-title {
+            font-family: 'Black Ops One', cursive;
+            font-size: 72px;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff3333, 0 0 20px #ff0000;
+            margin-bottom: 50px;
+            letter-spacing: 3px;
+        }
+        
+        .menu-button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 24px;
+            font-family: 'Press Start 2P', cursive;
+            background-color: #333;
+            color: white;
+            border: 3px solid #ff0000;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 300px;
+            text-align: center;
+        }
+        
+        .menu-button:hover {
+            background-color: #ff0000;
+            transform: scale(1.05);
+        }
+        
+        #skin-selection {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+            margin: 30px 0;
+        }
+        
+        .skin-option {
+            width: 150px;
+            height: 180px;
+            margin: 10px;
+            border: 3px solid #444;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #222;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .skin-option:hover {
+            border-color: #ff0000;
+        }
+        
+        .skin-option.selected {
+            border-color: #00ff00;
+            box-shadow: 0 0 15px #00ff00;
+        }
+        
+        .skin-option.locked {
+            filter: grayscale(100%);
+            cursor: not-allowed;
+        }
+        
+        .skin-option.locked::after {
+            content: "BLOQUEADA";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            color: #ff0000;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .skin-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .skin-name {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+        
+        .skin-description {
+            font-size: 10px;
+            text-align: center;
+            color: #aaa;
+        }
+        
+        .skin-unlock {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: #ff0000;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
         canvas {
             display: block;
             border: 3px solid red;
         }
+        
         #ui {
             position: absolute;
             top: 10px;
             left: 10px;
             pointer-events: none;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #ff0000;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
         }
+        
         #health-bar {
             width: 200px;
             height: 20px;
             background-color: #333;
             border: 2px solid #555;
             margin-bottom: 5px;
+            position: relative;
+            overflow: hidden;
         }
+        
         #health-fill {
             height: 100%;
             width: 100%;
-            background-color: #ff0000;
+            background: linear-gradient(to right, #ff0000, #ff3333);
             transition: width 0.3s;
         }
+        
+        #health-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: white;
+            text-shadow: 1px 1px 1px #000;
+        }
+        
         #xp-bar {
             width: 200px;
             height: 10px;
@@ -43,34 +241,58 @@
             border: 2px solid #555;
             margin-bottom: 5px;
         }
+        
         #xp-fill {
             height: 100%;
             width: 0%;
-            background-color: #00ff00;
+            background: linear-gradient(to right, #00ff00, #33ff33);
             transition: width 0.3s;
         }
+        
         #wave-info {
             font-size: 18px;
             margin-bottom: 5px;
+            color: #ffcc00;
         }
+        
         #score {
             font-size: 18px;
             margin-bottom: 5px;
+            color: #ffffff;
         }
+        
         #level {
             font-size: 18px;
             margin-bottom: 5px;
+            color: #00ccff;
         }
+        
+        #max-wave {
+            font-size: 16px;
+            color: #ff9900;
+        }
+        
         #powerups {
             position: absolute;
             bottom: 10px;
             left: 10px;
             display: none;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.9);
             padding: 10px;
             border-radius: 5px;
+            border: 2px solid #00ff00;
             pointer-events: auto;
+            max-width: 400px;
+            font-family: 'Press Start 2P', cursive;
         }
+        
+        #powerups h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
         .powerup-option {
             padding: 8px;
             margin: 5px;
@@ -78,10 +300,18 @@
             border: 1px solid #555;
             cursor: pointer;
             transition: background-color 0.2s;
+            font-size: 12px;
         }
+        
         .powerup-option:hover {
             background-color: #555;
+            border-color: #00ff00;
         }
+        
+        .powerup-option strong {
+            color: #00ccff;
+        }
+        
         #boss-health {
             position: absolute;
             top: 10px;
@@ -92,12 +322,14 @@
             border: 3px solid #ff0000;
             display: none;
         }
+        
         #boss-health-fill {
             height: 100%;
             width: 100%;
-            background-color: #ff0000;
+            background: linear-gradient(to right, #ff0000, #ff6666);
             transition: width 0.3s;
         }
+        
         #boss-name {
             position: absolute;
             top: -20px;
@@ -105,20 +337,52 @@
             font-size: 16px;
             color: #fff;
             text-shadow: 0 0 5px #ff0000;
+            font-family: 'Press Start 2P', cursive;
         }
+        
         #game-over {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px;
             border-radius: 10px;
             text-align: center;
             display: none;
+            border: 3px solid #ff0000;
+            font-family: 'Press Start 2P', cursive;
+            max-width: 500px;
+            width: 90%;
         }
+        
+        #game-over h2 {
+            font-size: 36px;
+            color: #ff0000;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff3333;
+        }
+        
+        #game-over p {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #fff;
+        }
+        
+        #final-score {
+            color: #ffcc00;
+        }
+        
+        #final-wave {
+            color: #00ccff;
+        }
+        
+        #final-level {
+            color: #00ff00;
+        }
+        
         #restart-btn {
-            padding: 10px 20px;
+            padding: 15px 30px;
             background-color: #ff3333;
             border: none;
             color: white;
@@ -126,19 +390,33 @@
             cursor: pointer;
             border-radius: 5px;
             margin-top: 20px;
+            font-family: 'Press Start 2P', cursive;
+            transition: all 0.3s;
         }
+        
         #restart-btn:hover {
             background-color: #ff5555;
+            transform: scale(1.05);
         }
+        
         #controls {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             padding: 10px;
             border-radius: 5px;
             font-size: 14px;
+            border: 2px solid #555;
+            font-family: 'Press Start 2P', cursive;
         }
+        
+        #controls p {
+            margin: 5px 0;
+            color: #aaa;
+            font-size: 12px;
+        }
+        
         #powerup-buttons {
             position: absolute;
             bottom: 100px;
@@ -146,7 +424,12 @@
             transform: translateX(-50%);
             display: none;
             gap: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
         }
+        
         .powerup-btn {
             width: 50px;
             height: 50px;
@@ -160,25 +443,116 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: 'Press Start 2P', cursive;
+            transition: all 0.3s;
         }
+        
         .powerup-btn:hover {
-            background-color: rgba(0, 255, 0, 0.2);
+            background-color: rgba(0, 255, 0, 0.3);
+            transform: scale(1.1);
+        }
+        
+        #ally-indicator {
+            position: absolute;
+            bottom: 150px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 2px solid #8e44ad;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            color: #fff;
+            display: none;
         }
     </style>
 </head>
 <body>
+    <div id="loading-screen">
+        <div id="loading-text">   CARREGANDO...</div>
+        <div id="loading-bar">
+            <div id="loading-progress"></div>
+        </div>
+    </div>
+    
+    <div id="main-menu">
+        <h1 id="game-title">SHURIKEN MASTER</h1>
+        
+        <div id="skin-selection">
+            <div class="skin-option selected" data-skin="classic">
+                <div class="skin-preview" style="background-color: #333; border: 3px solid #fff;">
+                    <div style="width: 60px; height: 60px; background-color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 50px; height: 50px; background-color: #333; border-radius: 50%; border: 2px solid #fff;"></div>
+                    </div>
+                </div>
+                <div class="skin-name">NINJA</div>
+                <div class="skin-description">Skin padrão do jogo</div>
+                <div class="skin-unlock">DESBLOQUEADA</div>
+            </div>
+            
+            <div class="skin-option locked" data-skin="desolated" data-unlock-wave="6">
+                <div class="skin-preview" style="background-color: #5d4037; border: 3px solid #8d6e63;">
+                    <div style="width: 60px; height: 60px; background-color: #3e2723; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 50px; height: 50px; background-color: #5d4037; border-radius: 50%; border: 2px solid #8d6e63;"></div>
+                    </div>
+                </div>
+                <div class="skin-name">NINJA DESOLADO</div>
+                <div class="skin-description">+30% cadência de tiro</div>
+                <div class="skin-unlock">DERROTE O BOSS DA WAVE 5 PARA DESBLOQUEAR</div>
+            </div>
+            
+            <div class="skin-option locked" data-skin="shadow" data-unlock-wave="11">
+                <div class="skin-preview" style="background-color: #263238; border: 3px solid #37474f;">
+                    <div style="width: 60px; height: 60px; background-color: #102027; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 50px; height: 50px; background-color: #263238; border-radius: 50%; border: 2px solid #37474f;"></div>
+                    </div>
+                </div>
+                <div class="skin-name">NINJA DAS SOMBRAS</div>
+                <div class="skin-description">+30% de dano</div>
+                <div class="skin-unlock">DERROTE O BOSS DA WAVE 10 PARA DESBLOQUEAR</div>
+            </div>
+            
+            <div class="skin-option locked" data-skin="grandmaster" data-unlock-wave="16">
+                <div class="skin-preview" style="background-color: #004d40; border: 3px solid #00796b;">
+                    <div style="width: 60px; height: 60px; background-color: #00251a; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 50px; height: 50px; background-color: #004d40; border-radius: 50%; border: 2px solid #00796b;"></div>
+                    </div>
+                </div>
+                <div class="skin-name">GRÃO MESTRE</div>
+                <div class="skin-description">+20% dano, +20% cadência, +15% HP</div>
+                <div class="skin-unlock">DERROTE O BOSS DA WAVE 15 PARA DESBLOQUEAR</div>
+            </div>
+            
+            <div class="skin-option locked" data-skin="godslayer" data-unlock-wave="21">
+                <div class="skin-preview" style="background: linear-gradient(45deg, #8e44ad, #9b59b6); border: 3px solid #5b2c6f;">
+                    <div style="width: 60px; height: 60px; background-color: #2c3e50; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(45deg, #8e44ad, #9b59b6); border-radius: 50%; border: 2px solid #5b2c6f;"></div>
+                    </div>
+                </div>
+                <div class="skin-name">MOLESTADOR DE DEUSES</div>
+                <div class="skin-description">+30% HP, +25% dano, +40% cadência, aliados</div>
+                <div class="skin-unlock">DERROTE O ANTIGO</div>
+            </div>
+        </div>
+        
+        <button class="menu-button" id="start-game">INICIAR JOGO</button>
+        <button class="menu-button" id="controls-button">CONTROLES</button>
+    </div>
+    
     <canvas id="gameCanvas"></canvas>
     
     <div id="ui">
         <div id="health-bar">
             <div id="health-fill"></div>
+            <div id="health-text">100%</div>
         </div>
         <div id="xp-bar">
             <div id="xp-fill"></div>
         </div>
-        <div id="wave-info">Onda: 1</div>
-        <div id="score">Pontuação: 0</div>
-        <div id="level">Nível: 1</div>
+        <div id="wave-info">ONDA: 1</div>
+        <div id="score">PONTUAÇÃO: 0</div>
+        <div id="level">NÍVEL: 1</div>
+        <div id="max-wave">RECORDE: 0</div>
     </div>
     
     <div id="boss-health">
@@ -187,7 +561,7 @@
     </div>
     
     <div id="powerups">
-        <h3>Escolha um Poder!</h3>
+        <h3>ESCOLHA UM PODER!</h3>
         <div id="powerup-options"></div>
     </div>
     
@@ -197,19 +571,24 @@
         <div class="powerup-btn" id="powerup-btn-3">3</div>
     </div>
     
+    <div id="ally-indicator">
+        ALIADOS: 0
+    </div>
+    
     <div id="game-over">
         <h2>FIM DE JOGO</h2>
-        <p id="final-score">Pontuação: 0</p>
-        <p id="final-wave">Onda: 0</p>
-        <p id="final-level">Nível: 0</p>
-        <button id="restart-btn">Jogar Novamente</button>
+        <p id="final-score">PONTUAÇÃO: 0</p>
+        <p id="final-wave">ONDA: 0</p>
+        <p id="final-level">NÍVEL: 0</p>
+        <p id="final-max-wave">RECORDE: 0</p>
+        <button id="restart-btn">MENU PRINCIPAL</button>
     </div>
     
     <div id="controls">
-        <p>WASD: Mover</p>
-        <p>Mouse: Mirar</p>
-        <p>Clique Esquerdo: Lançar Shuriken</p>
-        <p>1/2/3: Selecionar Poder</p>
+        <p>WASD: MOVER</p>
+        <p>MOUSE: MIRAR</p>
+        <p>CLIQUE ESQUERDO: LANÇAR SHURIKEN</p>
+        <p>1/2/3: SELECIONAR PODER</p>
     </div>
 
     <script>
@@ -262,7 +641,12 @@
             isStandingStill: false,
             dragonFuryActive: false,
             dragonFuryEndTime: 0,
-            lastOmniSlashTime: 0
+            lastOmniSlashTime: 0,
+            maxWaveReached: 0,
+            selectedSkin: 'classic',
+            allies: [],
+            lastAllySpawn: 0,
+            allySpawnCooldown: 10000
         };
 
         class Player {
@@ -281,6 +665,9 @@
                 this.slowTimer = 0;
                 this.originalSpeed = this.speed;
                 this.lastMoveTime = 0;
+                this.color = '#333';
+                this.borderColor = '#fff';
+                this.skin = 'classic';
             }
 
             update(deltaTime) {
@@ -354,6 +741,7 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
+                // Draw player based on skin
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 
@@ -372,24 +760,71 @@
                 } else if (this.slowed) {
                     ctx.fillStyle = '#00f';
                 } else {
-                    ctx.fillStyle = '#333';
+                    ctx.fillStyle = this.color;
                 }
                 
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
+                ctx.strokeStyle = this.borderColor;
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                ctx.beginPath();
-                ctx.arc(0, 0, this.radius * 0.8, 0, Math.PI);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-                
+                // Eyes
                 ctx.beginPath();
                 ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff';
                 ctx.fill();
+                
+                // Mouth
+                ctx.beginPath();
+                ctx.arc(0, this.radius * 0.1, this.radius * 0.3, 0, Math.PI);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                
+                // Additional skin details
+                if (this.skin === 'desolated') {
+                    // Cracked effect
+                    ctx.strokeStyle = '#5d4037';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(-this.radius * 0.5, -this.radius * 0.3);
+                    ctx.lineTo(-this.radius * 0.2, -this.radius * 0.1);
+                    ctx.lineTo(-this.radius * 0.4, this.radius * 0.2);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(this.radius * 0.3, -this.radius * 0.4);
+                    ctx.lineTo(this.radius * 0.5, -this.radius * 0.1);
+                    ctx.lineTo(this.radius * 0.2, this.radius * 0.3);
+                    ctx.stroke();
+                } else if (this.skin === 'shadow') {
+                    // Shadow effect
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(0, this.radius * 0.5, this.radius * 0.5, Math.PI, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.skin === 'grandmaster') {
+                    // Grandmaster symbol
+                    ctx.fillStyle = '#00796b';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -this.radius * 0.5);
+                    ctx.lineTo(-this.radius * 0.3, this.radius * 0.1);
+                    ctx.lineTo(this.radius * 0.3, this.radius * 0.1);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (this.skin === 'godslayer') {
+                    // Godslayer crown
+                    ctx.fillStyle = '#5b2c6f';
+                    ctx.beginPath();
+                    ctx.moveTo(-this.radius * 0.6, -this.radius * 0.4);
+                    ctx.lineTo(-this.radius * 0.4, -this.radius * 0.6);
+                    ctx.lineTo(0, -this.radius * 0.5);
+                    ctx.lineTo(this.radius * 0.4, -this.radius * 0.6);
+                    ctx.lineTo(this.radius * 0.6, -this.radius * 0.4);
+                    ctx.strokeStyle = '#8e44ad';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
                 
                 ctx.restore();
             }
@@ -406,22 +841,23 @@
                         gameState.gameOver = true;
                     }
                 }
+                updateHealthText();
             }
             
             applyBurn(damage, duration) {
-                this.burning = { damage, duration, timer: 0 };
+                this.burning = { damage, duration: 3000, timer: 0 }; // Fixed 3 second duration
             }
             
             applyShock(duration) {
                 this.shocked = true;
                 this.shockTimer = 0;
-                this.shockDuration = duration;
+                this.shockDuration = 3000; // Fixed 3 second duration
                 this.speed = this.originalSpeed * 0.7;
                 
                 Shuriken.prototype.damage *= 0.6;
                 setTimeout(() => {
                     Shuriken.prototype.damage /= 0.6;
-                }, duration);
+                }, this.shockDuration);
             }
 
             applySlow(amount, duration) {
@@ -429,6 +865,156 @@
                 this.slowTimer = 0;
                 this.speed = this.originalSpeed * (1 - amount);
                 this.slowDuration = duration;
+            }
+            
+            setSkin(skin) {
+                this.skin = skin;
+                switch(skin) {
+                    case 'classic':
+                        this.color = '#333';
+                        this.borderColor = '#fff';
+                        break;
+                    case 'desolated':
+                        this.color = '#5d4037';
+                        this.borderColor = '#8d6e63';
+                        config.shurikenCooldown = 450 * 0.7; // 30% faster attack speed
+                        break;
+                    case 'shadow':
+                        this.color = '#263238';
+                        this.borderColor = '#37474f';
+                        gameState.damageMultiplier = 1.3; // 30% more damage
+                        Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
+                        break;
+                    case 'grandmaster':
+                        this.color = '#004d40';
+                        this.borderColor = '#00796b';
+                        config.shurikenCooldown = 450 * 0.8; // 20% faster attack speed
+                        gameState.damageMultiplier = 1.2; // 20% more damage
+                        Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
+                        this.maxHealth = config.playerHealth * 1.15; // 15% more HP
+                        this.health = this.maxHealth;
+                        break;
+                    case 'godslayer':
+                        this.color = '#8e44ad';
+                        this.borderColor = '#5b2c6f';
+                        config.shurikenCooldown = 450 * 0.6; // 40% faster attack speed
+                        gameState.damageMultiplier = 1.25; // 25% more damage
+                        Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
+                        this.maxHealth = config.playerHealth * 1.3; // 30% more HP
+                        this.health = this.maxHealth;
+                        break;
+                }
+            }
+        }
+
+        class Ally {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 15;
+                this.health = 150;
+                this.maxHealth = 150;
+                this.damage = 10;
+                this.color = '#8e44ad';
+                this.borderColor = '#5b2c6f';
+                this.attackCooldown = 1000;
+                this.lastAttack = 0;
+                this.speed = 2;
+                this.target = null;
+            }
+
+            update(deltaTime) {
+                // Find nearest enemy
+                if (!this.target || this.target.health <= 0) {
+                    let closestDist = Infinity;
+                    for (const enemy of gameState.enemies) {
+                        const dx = enemy.x - this.x;
+                        const dy = enemy.y - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            this.target = enemy;
+                        }
+                    }
+                }
+
+                // Move toward target or wander
+                if (this.target) {
+                    const dx = this.target.x - this.x;
+                    const dy = this.target.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist > 0) {
+                        this.x += (dx / dist) * this.speed;
+                        this.y += (dy / dist) * this.speed;
+                    }
+
+                    // Attack if in range
+                    this.lastAttack += deltaTime;
+                    if (dist < this.radius + this.target.radius && this.lastAttack >= this.attackCooldown) {
+                        this.target.takeDamage(this.damage);
+                        createParticles(this.target.x, this.target.y, 5, '#9b59b6');
+                        this.lastAttack = 0;
+                    }
+                } else {
+                    // Wander randomly if no target
+                    if (Math.random() < 0.02) {
+                        this.angle = Math.random() * Math.PI * 2;
+                    }
+                    this.x += Math.cos(this.angle) * this.speed * 0.5;
+                    this.y += Math.sin(this.angle) * this.speed * 0.5;
+                }
+
+                // Stay within bounds
+                const borderBuffer = 5;
+                this.x = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.width - this.radius - borderBuffer, this.x));
+                this.y = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.height - this.radius - borderBuffer, this.y));
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Body
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+                gradient.addColorStop(0, '#9b59b6');
+                gradient.addColorStop(1, '#8e44ad');
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = this.borderColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Eyes
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                
+                // Mouth
+                ctx.beginPath();
+                ctx.arc(0, this.radius * 0.1, this.radius * 0.3, 0.1, Math.PI - 0.1);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                
+                // Health bar
+                if (this.health < this.maxHealth) {
+                    const healthPercent = this.health / this.maxHealth;
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(-this.radius, -this.radius - 10, this.radius * 2 * healthPercent, 3);
+                }
+                
+                ctx.restore();
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                return this.health <= 0;
             }
         }
 
@@ -558,6 +1144,7 @@
                 this.radius = 10;
                 this.damage = 10;
                 this.lifetime = 3000;
+                this.onlyPlayerCollision = true;
             }
 
             update(deltaTime) {
@@ -1089,6 +1676,12 @@
                     if (this.burn && this.burn.damage >= this.health) {
                         createParticles(this.x, this.y, 15, '#f80');
                     }
+                    
+                    // Check for godslayer skin ally spawn
+                    if (gameState.player.skin === 'godslayer' && Math.random() < 0.1) {
+                        spawnAlly(this.x, this.y);
+                    }
+                    
                     return true;
                 }
                 return false;
@@ -1440,6 +2033,9 @@
                     gameState.xp += this.xpValue;
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
+                    
+                    // Force next wave when boss dies
+                    gameState.waveTimer = config.waveDuration;
                     return true;
                 }
                 
@@ -1543,11 +2139,14 @@
             shootDarkMatter() {
                 for (let i = 0; i < 70; i++) {
                     const angle = (i / 70) * Math.PI * 2;
+                    // Projectiles spawn around the boss, not from inside
+                    const spawnDistance = this.radius + 30;
                     const projectile = new DarkMatterProjectile(
-                        this.x + Math.cos(angle) * this.radius,
-                        this.y + Math.sin(angle) * this.radius,
+                        this.x + Math.cos(angle) * spawnDistance,
+                        this.y + Math.sin(angle) * spawnDistance,
                         angle
                     );
+                    projectile.onlyPlayerCollision = true;
                     gameState.shurikens.push(projectile);
                 }
             }
@@ -1623,6 +2222,7 @@
                     projectile.radius = 8;
                     projectile.damage = 5;
                     projectile.speed = 6;
+                    projectile.onlyPlayerCollision = true;
                     
                     gameState.shurikens.push(projectile);
                 }
@@ -1638,6 +2238,14 @@
                     gameState.xp += this.xpValue;
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
+                    
+                    // Unlock godslayer skin if wave 21
+                    if (gameState.wave >= 21) {
+                        unlockSkin('godslayer');
+                    }
+                    
+                    // Force next wave when boss dies
+                    gameState.waveTimer = config.waveDuration;
                     return true;
                 }
                 
@@ -1752,6 +2360,7 @@
                     apply: () => {
                         gameState.player.maxHealth *= 1.5;
                         gameState.player.health *= 1.5;
+                        updateHealthText();
                     }
                 }
             ],
@@ -1939,6 +2548,7 @@
                                 gameState.player.maxHealth,
                                 gameState.player.health + amount * 0.03
                             );
+                            updateHealthText();
                             return died;
                         };
                     }
@@ -2117,6 +2727,7 @@
                         gameState.player.maxHealth *= 1.70;
                         gameState.player.health *= 1.70;
                         config.shurikenCooldown *= 0.75;
+                        updateHealthText();
                     }
                 }
             ]
@@ -2129,6 +2740,48 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             
+            // Simulate loading
+            simulateLoading();
+            
+            // Set up event listeners after loading
+            setupEventListeners();
+        }
+
+        function simulateLoading() {
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').style.display = 'none';
+                        showMainMenu();
+                    }, 500);
+                }
+                document.getElementById('loading-progress').style.width = `${progress}%`;
+            }, 100);
+        }
+
+        function showMainMenu() {
+            document.getElementById('main-menu').style.display = 'flex';
+            
+            // Update skin unlocks based on max wave reached
+            updateSkinUnlocks();
+        }
+
+        function updateSkinUnlocks() {
+            const skins = document.querySelectorAll('.skin-option');
+            skins.forEach(skin => {
+                const unlockWave = skin.dataset.unlockWave;
+                if (unlockWave && gameState.maxWaveReached >= parseInt(unlockWave)) {
+                    skin.classList.remove('locked');
+                    skin.querySelector('.skin-unlock').textContent = 'DESBLOQUEADA';
+                }
+            });
+        }
+
+        function setupEventListeners() {
             window.addEventListener('keydown', (e) => {
                 gameState.keys[e.code] = true;
                 
@@ -2165,10 +2818,31 @@
             document.getElementById('powerup-btn-2').addEventListener('click', () => selectPowerUpByIndex(1));
             document.getElementById('powerup-btn-3').addEventListener('click', () => selectPowerUpByIndex(2));
             
-            document.getElementById('restart-btn').addEventListener('click', resetGame);
+            document.getElementById('restart-btn').addEventListener('click', returnToMainMenu);
             
+            document.getElementById('start-game').addEventListener('click', startGame);
+            
+            // Skin selection
+            document.querySelectorAll('.skin-option').forEach(skin => {
+                skin.addEventListener('click', () => {
+                    if (!skin.classList.contains('locked')) {
+                        document.querySelectorAll('.skin-option').forEach(s => s.classList.remove('selected'));
+                        skin.classList.add('selected');
+                        gameState.selectedSkin = skin.dataset.skin;
+                    }
+                });
+            });
+        }
+
+        function startGame() {
+            document.getElementById('main-menu').style.display = 'none';
             resetGame();
             gameLoop(0);
+        }
+
+        function returnToMainMenu() {
+            document.getElementById('game-over').style.display = 'none';
+            showMainMenu();
         }
 
         function resizeCanvas() {
@@ -2181,6 +2855,9 @@
                 gameState.canvas.width / 2,
                 gameState.canvas.height / 2
             );
+            
+            // Apply selected skin
+            gameState.player.setSkin(gameState.selectedSkin);
             
             gameState.shurikens = [];
             gameState.enemies = [];
@@ -2215,6 +2892,7 @@
             gameState.dragonFuryActive = false;
             gameState.dragonFuryEndTime = 0;
             gameState.lastOmniSlashTime = 0;
+            gameState.allies = [];
             
             config.shurikenSpeed = 10;
             config.shurikenCooldown = 350;
@@ -2286,6 +2964,22 @@
         function updateGame(deltaTime) {
             gameState.player.update(deltaTime);
             
+            // Update allies
+            for (let i = gameState.allies.length - 1; i >= 0; i--) {
+                gameState.allies[i].update(deltaTime);
+                if (gameState.allies[i].health <= 0) {
+                    gameState.allies.splice(i, 1);
+                }
+            }
+            
+            // Update ally indicator
+            if (gameState.player.skin === 'godslayer') {
+                document.getElementById('ally-indicator').style.display = 'block';
+                document.getElementById('ally-indicator').textContent = `ALIADOS: ${gameState.allies.length}`;
+            } else {
+                document.getElementById('ally-indicator').style.display = 'none';
+            }
+            
             // Aumento de dano a cada 5 níveis
             if (gameState.level % 5 === 0 && gameState.damageMultiplier < 1 + (Math.floor(gameState.level / 5) * 0.2)) {
                 gameState.damageMultiplier = 1 + (Math.floor(gameState.level / 5) * 0.2);
@@ -2302,6 +2996,7 @@
                     );
                     createParticles(gameState.player.x, gameState.player.y, 10, '#ff0');
                     gameState.lastMeditationHeal = now;
+                    updateHealthText();
                 }
             }
             
@@ -2359,80 +3054,102 @@
                     const dy = shuriken.y - gameState.player.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     
-                    // Apenas colide com o jogador
-                    if (dist < shuriken.radius + gameState.player.radius) {
-                        gameState.player.takeDamage(shuriken.damage);
-                        gameState.player.applySlow(0.3, 3000);
-                        gameState.shurikens.splice(i, 1);
-                        createParticles(shuriken.x, shuriken.y, 10, '#8e44ad');
-                        continue;
+                    // Apenas colide com o jogador se onlyPlayerCollision for true
+                    if (shuriken.onlyPlayerCollision) {
+                        if (dist < shuriken.radius + gameState.player.radius) {
+                            gameState.player.takeDamage(shuriken.damage);
+                            gameState.player.applySlow(0.3, 3000);
+                            gameState.shurikens.splice(i, 1);
+                            createParticles(shuriken.x, shuriken.y, 10, '#8e44ad');
+                            continue;
+                        }
+                    } else {
+                        // Colisão normal com inimigos
+                        for (let j = gameState.enemies.length - 1; j >= 0; j--) {
+                            const enemy = gameState.enemies[j];
+                            const dx = shuriken.x - enemy.x;
+                            const dy = shuriken.y - enemy.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (dist < shuriken.radius + enemy.radius) {
+                                const died = enemy.takeDamage(shuriken.damage);
+                                if (died) {
+                                    gameState.enemies.splice(j, 1);
+                                }
+                                gameState.shurikens.splice(i, 1);
+                                break;
+                            }
+                        }
                     }
                 }
                 
-                for (let j = gameState.enemies.length - 1; j >= 0; j--) {
-                    const enemy = gameState.enemies[j];
-                    const dx = shuriken.x - enemy.x;
-                    const dy = shuriken.y - enemy.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < shuriken.radius + enemy.radius) {
-                        const died = enemy.takeDamage(shuriken.damage);
+                if (!shuriken.onlyPlayerCollision) {
+                    for (let j = gameState.enemies.length - 1; j >= 0; j--) {
+                        const enemy = gameState.enemies[j];
+                        const dx = shuriken.x - enemy.x;
+                        const dy = shuriken.y - enemy.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
                         
-                        createParticles(
-                            enemy.x,
-                            enemy.y,
-                            5,
-                            enemy.color
-                        );
-                        
-                        if (shuriken.explosive) {
-                            createExplosion(shuriken.x, shuriken.y, 50, shuriken.damage * 0.8);
-                        }
-                        
-                        if (shuriken.atomic && died) {
-                            createExplosion(enemy.x, enemy.y, 80, shuriken.damage * 0.5);
-                        }
-                        
-                        if (died) {
-                            gameState.score += enemy.xpValue;
-                            gameState.xp += enemy.xpValue;
+                        if (dist < shuriken.radius + enemy.radius) {
+                            const died = enemy.takeDamage(shuriken.damage);
                             
                             createParticles(
                                 enemy.x,
                                 enemy.y,
-                                15,
+                                5,
                                 enemy.color
                             );
                             
-                            if (gameState.shadowStep && Math.random() < 0.3) {
-                                const angle = Math.random() * Math.PI * 2;
-                                const distance = 100;
-                                gameState.player.x += Math.cos(angle) * distance;
-                                gameState.player.y += Math.sin(angle) * distance;
-                                createParticles(enemy.x, enemy.y, 20, '#888');
+                            if (shuriken.explosive) {
+                                createExplosion(shuriken.x, shuriken.y, 50, shuriken.damage * 0.8);
                             }
                             
-                            if (gameState.bloodlust) {
-                                gameState.player.health = Math.min(
-                                    gameState.player.maxHealth,
-                                    gameState.player.health + gameState.player.maxHealth * 0.08
+                            if (shuriken.atomic && died) {
+                                createExplosion(enemy.x, enemy.y, 80, shuriken.damage * 0.5);
+                            }
+                            
+                            if (died) {
+                                gameState.score += enemy.xpValue;
+                                gameState.xp += enemy.xpValue;
+                                
+                                createParticles(
+                                    enemy.x,
+                                    enemy.y,
+                                    15,
+                                    enemy.color
+                                );
+                                
+                                if (gameState.shadowStep && Math.random() < 0.3) {
+                                    const angle = Math.random() * Math.PI * 2;
+                                    const distance = 100;
+                                    gameState.player.x += Math.cos(angle) * distance;
+                                    gameState.player.y += Math.sin(angle) * distance;
+                                    createParticles(enemy.x, enemy.y, 20, '#888');
+                                }
+                                
+                                if (gameState.bloodlust) {
+                                    gameState.player.health = Math.min(
+                                        gameState.player.maxHealth,
+                                        gameState.player.health + gameState.player.maxHealth * 0.08
+                                    );
+                                    updateHealthText();
+                                }
+                                
+                                if (gameState.toxicCloud) {
+                                    const cloud = new ToxicCloud(enemy.x, enemy.y);
+                                    gameState.particles.push(cloud);
+                                }
+                                
+                                gameState.enemies.splice(j, 1);
+                                gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
+                                    h => h !== enemy.explosionHitbox
                                 );
                             }
                             
-                            if (gameState.toxicCloud) {
-                                const cloud = new ToxicCloud(enemy.x, enemy.y);
-                                gameState.particles.push(cloud);
+                            if (!shuriken.piercing && !shuriken.pinkPiercing) {
+                                gameState.shurikens.splice(i, 1);
+                                break;
                             }
-                            
-                            gameState.enemies.splice(j, 1);
-                            gameState.explosionHitboxes = gameState.explosionHitboxes.filter(
-                                h => h !== enemy.explosionHitbox
-                            );
-                        }
-                        
-                        if (!shuriken.piercing && !shuriken.pinkPiercing) {
-                            gameState.shurikens.splice(i, 1);
-                            break;
                         }
                     }
                 }
@@ -2530,28 +3247,33 @@
                 }
             }
             
-            gameState.spawnTimer += deltaTime;
-            const spawnRate = Math.max(500, config.enemySpawnRate - gameState.wave * 50);
-            
-            if (gameState.spawnTimer >= spawnRate && !gameState.bossActive && !gameState.omegaBossActive) {
-                spawnEnemy();
-                gameState.spawnTimer = 0;
+            // Don't spawn enemies during boss waves
+            if (!gameState.bossActive) {
+                gameState.spawnTimer += deltaTime;
+                const spawnRate = Math.max(500, config.enemySpawnRate - gameState.wave * 50);
+                
+                if (gameState.spawnTimer >= spawnRate && !gameState.omegaBossActive) {
+                    spawnEnemy();
+                    gameState.spawnTimer = 0;
+                }
             }
             
             gameState.waveTimer += deltaTime;
-            if (gameState.waveTimer >= config.waveDuration) {
+            if (gameState.waveTimer >= config.waveDuration && !gameState.bossActive) {
                 nextWave();
             }
             
             if (!gameState.bossActive && !gameState.bossSpawned && gameState.wave % 5 === 0 && gameState.wave < 20) {
                 spawnBoss();
                 gameState.bossSpawned = true;
+                gameState.bossActive = true;
             }
             
             if (gameState.wave === 20 && !gameState.omegaBossActive && !gameState.bossSpawned) {
                 spawnOmegaBoss();
                 gameState.bossSpawned = true;
                 gameState.omegaBossActive = true;
+                gameState.bossActive = true;
             }
             
             if (gameState.xp >= gameState.xpToLevel && gameState.level < 11) {
@@ -2629,10 +3351,44 @@
             document.getElementById('boss-name').textContent = boss.name;
         }
 
+        function spawnAlly(x, y) {
+            const now = Date.now();
+            if (now - gameState.lastAllySpawn >= gameState.allySpawnCooldown) {
+                const ally = new Ally(x, y);
+                gameState.allies.push(ally);
+                gameState.lastAllySpawn = now;
+                createParticles(x, y, 15, '#9b59b6');
+            }
+        }
+
+        function unlockSkin(skinName) {
+            const skin = document.querySelector(`.skin-option[data-skin="${skinName}"]`);
+            if (skin) {
+                skin.classList.remove('locked');
+                skin.querySelector('.skin-unlock').textContent = 'DESBLOQUEADA';
+            }
+        }
+
         function nextWave() {
             gameState.wave++;
             gameState.waveTimer = 0;
             gameState.bossSpawned = false;
+            
+            // Update max wave reached
+            if (gameState.wave > gameState.maxWaveReached) {
+                gameState.maxWaveReached = gameState.wave;
+                
+                // Unlock skins based on wave reached
+                if (gameState.maxWaveReached >= 6) {
+                    unlockSkin('desolated');
+                }
+                if (gameState.maxWaveReached >= 11) {
+                    unlockSkin('shadow');
+                }
+                if (gameState.maxWaveReached >= 16) {
+                    unlockSkin('grandmaster');
+                }
+            }
             
             config.enemySpawnRate = Math.max(500, config.enemySpawnRate - 50);
         }
@@ -2804,16 +3560,23 @@
             updateUI();
         }
 
+        function updateHealthText() {
+            const healthPercent = Math.floor((gameState.player.health / gameState.player.maxHealth) * 100);
+            document.getElementById('health-text').textContent = `${healthPercent}%`;
+        }
+
         function updateUI() {
             const healthPercent = gameState.player.health / gameState.player.maxHealth;
             document.getElementById('health-fill').style.width = `${healthPercent * 100}%`;
+            updateHealthText();
             
             const xpPercent = Math.min(100, (gameState.xp / gameState.xpToLevel) * 100);
             document.getElementById('xp-fill').style.width = `${xpPercent}%`;
             
-            document.getElementById('wave-info').textContent = `Onda: ${gameState.wave}`;
-            document.getElementById('score').textContent = `Pontuação: ${gameState.score}`;
-            document.getElementById('level').textContent = `Nível: ${gameState.level}`;
+            document.getElementById('wave-info').textContent = `ONDA: ${gameState.wave}`;
+            document.getElementById('score').textContent = `PONTUAÇÃO: ${gameState.score}`;
+            document.getElementById('level').textContent = `NÍVEL: ${gameState.level}`;
+            document.getElementById('max-wave').textContent = `RECORDE: ${gameState.maxWaveReached}`;
             
             if (gameState.bosses.length > 0) {
                 const boss = gameState.bosses[0];
@@ -2823,15 +3586,17 @@
         }
 
         function showGameOver() {
-            document.getElementById('final-score').textContent = `Pontuação: ${gameState.score}`;
-            document.getElementById('final-wave').textContent = `Onda: ${gameState.wave}`;
-            document.getElementById('final-level').textContent = `Nível: ${gameState.level}`;
+            document.getElementById('final-score').textContent = `PONTUAÇÃO: ${gameState.score}`;
+            document.getElementById('final-wave').textContent = `ONDA: ${gameState.wave}`;
+            document.getElementById('final-level').textContent = `NÍVEL: ${gameState.level}`;
+            document.getElementById('final-max-wave').textContent = `RECORDE: ${gameState.maxWaveReached}`;
             document.getElementById('game-over').style.display = 'block';
         }
 
         function render() {
             gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
             
+            // Draw grid background
             gameState.ctx.fillStyle = '#111';
             gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
             
@@ -2853,6 +3618,7 @@
                 gameState.ctx.stroke();
             }
             
+            // Draw particles
             gameState.particles.forEach(p => {
                 if (p instanceof ToxicCloud || p instanceof DarkMatterPool) {
                     p.draw(gameState.ctx);
@@ -2861,9 +3627,19 @@
                 }
             });
             
+            // Draw allies
+            gameState.allies.forEach(ally => ally.draw(gameState.ctx));
+            
+            // Draw enemies
             gameState.enemies.forEach(e => e.draw(gameState.ctx));
+            
+            // Draw bosses
             gameState.bosses.forEach(b => b.draw(gameState.ctx));
+            
+            // Draw shurikens
             gameState.shurikens.forEach(s => s.draw(gameState.ctx));
+            
+            // Draw player
             gameState.player.draw(gameState.ctx);
         }
 
