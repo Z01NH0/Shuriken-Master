@@ -519,7 +519,7 @@
                     </div>
                 </div>
                 <div class="skin-name">GRÃO MESTRE</div>
-                <div class="skin-description">+20% dano, +20% cadência, +15% HP</div>
+                <div class="skin-description">+15% HP, +20% dano, +20% cadência de tiro</div>
                 <div class="skin-unlock">DERROTE O BOSS DA WAVE 15 PARA DESBLOQUEAR</div>
             </div>
             
@@ -530,13 +530,13 @@
                     </div>
                 </div>
                 <div class="skin-name">MOLESTADOR DE DEUSES</div>
-                <div class="skin-description">+30% HP, +25% dano, +40% cadência, aliados</div>
+                <div class="skin-description">+30% HP, +25% dano, +40% cadência de tiro, invoca aliados</div>
                 <div class="skin-unlock">DERROTE O ANTIGO</div>
             </div>
         </div>
         
         <button class="menu-button" id="start-game">INICIAR JOGO</button>
-        <button class="menu-button" id="controls-button">CONTROLES</button>
+        
     </div>
     
     <canvas id="gameCanvas"></canvas>
@@ -549,10 +549,10 @@
         <div id="xp-bar">
             <div id="xp-fill"></div>
         </div>
-        <div id="wave-info">ONDA: 1</div>
-        <div id="score">PONTUAÇÃO: 0</div>
+        <div id="wave-info">WAVE: 1</div>
+        <div id="max-wave">WAVE MÁXIMA: 0</div>
         <div id="level">NÍVEL: 1</div>
-        <div id="max-wave">RECORDE: 0</div>
+        <div id="score">PONTUAÇÃO: 0</div>
     </div>
     
     <div id="boss-health">
@@ -576,18 +576,18 @@
     </div>
     
     <div id="game-over">
-        <h2>FIM DE JOGO</h2>
+        <h2>FIM DE JOGO</h2>  
+        <p id="final-wave">WAVE: 0</p>
+        <p id="final-max-wave">WAVE MÁXIMA: 0</p>
+        <p id="final-level">NÍVEL: 0</p> 
         <p id="final-score">PONTUAÇÃO: 0</p>
-        <p id="final-wave">ONDA: 0</p>
-        <p id="final-level">NÍVEL: 0</p>
-        <p id="final-max-wave">RECORDE: 0</p>
-        <button id="restart-btn">MENU PRINCIPAL</button>
+        <button id="restart-btn">MENU</button>
     </div>
     
     <div id="controls">
         <p>WASD: MOVER</p>
         <p>MOUSE: MIRAR</p>
-        <p>CLIQUE ESQUERDO: LANÇAR SHURIKEN</p>
+        <p>CLIQUE (OU SEGURAR): ATIRAR</p>
         <p>1/2/3: SELECIONAR PODER</p>
     </div>
 
@@ -741,7 +741,7 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
-                // Draw player based on skin
+                
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 
@@ -768,22 +768,22 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Eyes
+
                 ctx.beginPath();
                 ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 
-                // Mouth
+                
                 ctx.beginPath();
                 ctx.arc(0, this.radius * 0.1, this.radius * 0.3, 0, Math.PI);
                 ctx.fillStyle = '#000';
                 ctx.fill();
                 
-                // Additional skin details
+                
                 if (this.skin === 'desolated') {
-                    // Cracked effect
+                   
                     ctx.strokeStyle = '#5d4037';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
@@ -791,20 +791,19 @@
                     ctx.lineTo(-this.radius * 0.2, -this.radius * 0.1);
                     ctx.lineTo(-this.radius * 0.4, this.radius * 0.2);
                     ctx.stroke();
-                    
                     ctx.beginPath();
                     ctx.moveTo(this.radius * 0.3, -this.radius * 0.4);
                     ctx.lineTo(this.radius * 0.5, -this.radius * 0.1);
                     ctx.lineTo(this.radius * 0.2, this.radius * 0.3);
                     ctx.stroke();
-                } else if (this.skin === 'shadow') {
-                    // Shadow effect
+                  
+                } else if (this.skin === 'shadow') {         
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                     ctx.beginPath();
                     ctx.arc(0, this.radius * 0.5, this.radius * 0.5, Math.PI, Math.PI * 2);
                     ctx.fill();
+                  
                 } else if (this.skin === 'grandmaster') {
-                    // Grandmaster symbol
                     ctx.fillStyle = '#00796b';
                     ctx.beginPath();
                     ctx.moveTo(0, -this.radius * 0.5);
@@ -812,8 +811,8 @@
                     ctx.lineTo(this.radius * 0.3, this.radius * 0.1);
                     ctx.closePath();
                     ctx.fill();
+                  
                 } else if (this.skin === 'godslayer') {
-                    // Godslayer crown
                     ctx.fillStyle = '#5b2c6f';
                     ctx.beginPath();
                     ctx.moveTo(-this.radius * 0.6, -this.radius * 0.4);
@@ -845,13 +844,13 @@
             }
             
             applyBurn(damage, duration) {
-                this.burning = { damage, duration: 3000, timer: 0 }; // Fixed 3 second duration
+                this.burning = { damage, duration: 3000, timer: 0 };
             }
             
             applyShock(duration) {
                 this.shocked = true;
                 this.shockTimer = 0;
-                this.shockDuration = 3000; // Fixed 3 second duration
+                this.shockDuration = 3000; 
                 this.speed = this.originalSpeed * 0.7;
                 
                 Shuriken.prototype.damage *= 0.6;
@@ -877,30 +876,30 @@
                     case 'desolated':
                         this.color = '#5d4037';
                         this.borderColor = '#8d6e63';
-                        config.shurikenCooldown = 450 * 0.7; // 30% faster attack speed
+                        config.shurikenCooldown = 450 * 0.7; 
                         break;
                     case 'shadow':
                         this.color = '#263238';
                         this.borderColor = '#37474f';
-                        gameState.damageMultiplier = 1.3; // 30% more damage
+                        gameState.damageMultiplier = 1.3; 
                         Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
                         break;
                     case 'grandmaster':
                         this.color = '#004d40';
                         this.borderColor = '#00796b';
-                        config.shurikenCooldown = 450 * 0.8; // 20% faster attack speed
-                        gameState.damageMultiplier = 1.2; // 20% more damage
+                        config.shurikenCooldown = 450 * 0.8; 
+                        gameState.damageMultiplier = 1.2;
                         Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
-                        this.maxHealth = config.playerHealth * 1.15; // 15% more HP
+                        this.maxHealth = config.playerHealth * 1.30; 
                         this.health = this.maxHealth;
                         break;
                     case 'godslayer':
                         this.color = '#8e44ad';
                         this.borderColor = '#5b2c6f';
-                        config.shurikenCooldown = 450 * 0.6; // 40% faster attack speed
-                        gameState.damageMultiplier = 1.25; // 25% more damage
+                        config.shurikenCooldown = 450 * 0.6; 
+                        gameState.damageMultiplier = 1.25; 
                         Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
-                        this.maxHealth = config.playerHealth * 1.3; // 30% more HP
+                        this.maxHealth = config.playerHealth * 1.5; 
                         this.health = this.maxHealth;
                         break;
                 }
@@ -924,7 +923,7 @@
             }
 
             update(deltaTime) {
-                // Find nearest enemy
+                
                 if (!this.target || this.target.health <= 0) {
                     let closestDist = Infinity;
                     for (const enemy of gameState.enemies) {
@@ -938,7 +937,7 @@
                     }
                 }
 
-                // Move toward target or wander
+               
                 if (this.target) {
                     const dx = this.target.x - this.x;
                     const dy = this.target.y - this.y;
@@ -949,7 +948,7 @@
                         this.y += (dy / dist) * this.speed;
                     }
 
-                    // Attack if in range
+                   
                     this.lastAttack += deltaTime;
                     if (dist < this.radius + this.target.radius && this.lastAttack >= this.attackCooldown) {
                         this.target.takeDamage(this.damage);
@@ -957,7 +956,7 @@
                         this.lastAttack = 0;
                     }
                 } else {
-                    // Wander randomly if no target
+                   
                     if (Math.random() < 0.02) {
                         this.angle = Math.random() * Math.PI * 2;
                     }
@@ -965,7 +964,7 @@
                     this.y += Math.sin(this.angle) * this.speed * 0.5;
                 }
 
-                // Stay within bounds
+              
                 const borderBuffer = 5;
                 this.x = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.width - this.radius - borderBuffer, this.x));
                 this.y = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.height - this.radius - borderBuffer, this.y));
@@ -975,7 +974,7 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 
-                // Body
+               
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 
@@ -989,20 +988,20 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Eyes
+               
                 ctx.beginPath();
                 ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 
-                // Mouth
+                
                 ctx.beginPath();
                 ctx.arc(0, this.radius * 0.1, this.radius * 0.3, 0.1, Math.PI - 0.1);
                 ctx.fillStyle = '#000';
                 ctx.fill();
                 
-                // Health bar
+              
                 if (this.health < this.maxHealth) {
                     const healthPercent = this.health / this.maxHealth;
                     ctx.fillStyle = '#f00';
@@ -1280,10 +1279,10 @@
                 this.y = y;
                 this.angle = angle;
                 this.speed = 8;
-                this.width = 15;
-                this.height = 120;
+                this.width = 120;
+                this.height = 15;
                 this.damage = 11;
-                this.lifetime = 1500;
+                this.lifetime = 3000;
                 this.distanceTraveled = 0;
             }
 
@@ -1909,8 +1908,8 @@
                             gameState.player.x - this.x
                         );
                         
-                        for (let i = 0; i < 2; i++) {
-                            const angle = angleToPlayer + (i - 2) * 0.1;
+                        for (let i = 0; i < 3; i++) {
+                            const angle = angleToPlayer + (i - 2) * 0.2;
                             
                             const projectile = new ThunderProjectile(
                                 this.x,
@@ -1970,7 +1969,7 @@
                         this.abilityCooldown = 2500;
                         break;
                     case 'thunder':
-                        this.abilityCooldown = 1500;
+                        this.abilityCooldown = 2500;
                         break;
                 }
             }
@@ -2034,7 +2033,7 @@
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
                     
-                    // Force next wave when boss dies
+                   
                     gameState.waveTimer = config.waveDuration;
                     return true;
                 }
@@ -2055,7 +2054,7 @@
                 this.damage = 50;
                 this.color = '#5b2c6f';
                 this.xpValue = 5000;
-                this.attackCooldown = 2000;
+                this.attackCooldown = 4000;
                 this.lastAttack = 0;
                 this.name = "Antigo Deus Caído";
                 this.isBoss = true;
@@ -2070,7 +2069,7 @@
                 this.minionAttackTimer = 0;
                 this.minionAttackInterval = 2000;
                 
-                // Posição inicial aleatória
+               
                 this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
                 this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
             }
@@ -2081,31 +2080,31 @@
                 this.spawnTimer += deltaTime;
                 this.lastAttack += deltaTime;
                 
-                // Teleporte a cada 2 segundos
+              
                 if (this.teleportTimer >= this.teleportInterval) {
                     this.teleport();
                     this.teleportTimer = 0;
                 }
                 
-                // Ataque de projéteis a cada 5 segundos
+              
                 if (this.projectileTimer >= this.projectileInterval) {
                     this.shootDarkMatter();
                     this.projectileTimer = 0;
                 }
                 
-                // Spawn de inimigos
+              
                 if (this.spawnTimer >= this.spawnInterval) {
                     this.spawnEnemy();
                     this.spawnTimer = 0;
                 }
                 
-                // Quando chegar a 35% de vida, spawna minions
+               
                 if (this.health <= this.maxHealth * 0.35 && !this.minionSpawned) {
                     this.spawnMinions();
                     this.minionSpawned = true;
                 }
                 
-                // Atualizar minions
+                
                 if (this.minionSpawned) {
                     this.minionAttackTimer += deltaTime;
                     if (this.minionAttackTimer >= this.minionAttackInterval) {
@@ -2114,7 +2113,7 @@
                     }
                 }
                 
-                // Verificar colisão com o jogador
+               
                 const dx = gameState.player.x - this.x;
                 const dy = gameState.player.y - this.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
@@ -2129,7 +2128,7 @@
                 this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
                 this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
                 
-                // Criar poça de matéria negra no local do teleporte
+               
                 const pool = new DarkMatterPool(this.x, this.y);
                 gameState.particles.push(pool);
                 
@@ -2139,7 +2138,6 @@
             shootDarkMatter() {
                 for (let i = 0; i < 70; i++) {
                     const angle = (i / 70) * Math.PI * 2;
-                    // Projectiles spawn around the boss, not from inside
                     const spawnDistance = this.radius + 30;
                     const projectile = new DarkMatterProjectile(
                         this.x + Math.cos(angle) * spawnDistance,
@@ -2239,12 +2237,12 @@
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
                     
-                    // Unlock godslayer skin if wave 21
+                   
                     if (gameState.wave >= 21) {
                         unlockSkin('godslayer');
                     }
                     
-                    // Force next wave when boss dies
+                   
                     gameState.waveTimer = config.waveDuration;
                     return true;
                 }
@@ -2268,7 +2266,7 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                // Olhos bravos
+              
                 ctx.beginPath();
                 ctx.moveTo(this.x - this.radius * 0.3, this.y - this.radius * 0.2);
                 ctx.lineTo(this.x - this.radius * 0.1, this.y - this.radius * 0.3);
@@ -2283,14 +2281,14 @@
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 
-                // Boca brava
+                
                 ctx.beginPath();
                 ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.3, 0.1, Math.PI - 0.1);
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 3;
                 ctx.stroke();
                 
-                // Desenhar minions se existirem
+                
                 if (this.minionSpawned) {
                     for (const minion of this.minions) {
                         ctx.beginPath();
@@ -2300,7 +2298,7 @@
                     }
                 }
                 
-                // Barra de vida
+                
                 if (this.health < this.maxHealth) {
                     const healthPercent = this.health / this.maxHealth;
                     ctx.fillStyle = '#f00';
@@ -2740,10 +2738,10 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             
-            // Simulate loading
+            
             simulateLoading();
             
-            // Set up event listeners after loading
+            
             setupEventListeners();
         }
 
@@ -2766,7 +2764,7 @@
         function showMainMenu() {
             document.getElementById('main-menu').style.display = 'flex';
             
-            // Update skin unlocks based on max wave reached
+           
             updateSkinUnlocks();
         }
 
@@ -2822,7 +2820,7 @@
             
             document.getElementById('start-game').addEventListener('click', startGame);
             
-            // Skin selection
+           
             document.querySelectorAll('.skin-option').forEach(skin => {
                 skin.addEventListener('click', () => {
                     if (!skin.classList.contains('locked')) {
@@ -2856,7 +2854,7 @@
                 gameState.canvas.height / 2
             );
             
-            // Apply selected skin
+           
             gameState.player.setSkin(gameState.selectedSkin);
             
             gameState.shurikens = [];
@@ -2972,7 +2970,7 @@
                 }
             }
             
-            // Update ally indicator
+           
             if (gameState.player.skin === 'godslayer') {
                 document.getElementById('ally-indicator').style.display = 'block';
                 document.getElementById('ally-indicator').textContent = `ALIADOS: ${gameState.allies.length}`;
@@ -2980,13 +2978,13 @@
                 document.getElementById('ally-indicator').style.display = 'none';
             }
             
-            // Aumento de dano a cada 5 níveis
+          
             if (gameState.level % 5 === 0 && gameState.damageMultiplier < 1 + (Math.floor(gameState.level / 5) * 0.2)) {
                 gameState.damageMultiplier = 1 + (Math.floor(gameState.level / 5) * 0.2);
                 Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
             }
             
-            // Meditação - cura quando parado
+           
             if (gameState.healthRegen && gameState.isStandingStill) {
                 const now = Date.now();
                 if (now - gameState.lastMeditationHeal >= 2000) {
@@ -3000,7 +2998,7 @@
                 }
             }
             
-            // Mestre do Desespero - mais rápido com vida baixa
+           
             if (gameState.timeSlow) {
                 if (gameState.player.health <= gameState.player.maxHealth * 0.35) {
                     gameState.player.speed = gameState.player.originalSpeed * 1.5;
@@ -3009,7 +3007,7 @@
                 }
             }
             
-            // Último Esforço - mais dano com vida baixa
+            
             if (gameState.finalGambit) {
                 if (gameState.player.health <= gameState.player.maxHealth * 0.35) {
                     Shuriken.prototype.damage = 11 * gameState.damageMultiplier * 2;
@@ -3054,7 +3052,7 @@
                     const dy = shuriken.y - gameState.player.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     
-                    // Apenas colide com o jogador se onlyPlayerCollision for true
+                   
                     if (shuriken.onlyPlayerCollision) {
                         if (dist < shuriken.radius + gameState.player.radius) {
                             gameState.player.takeDamage(shuriken.damage);
@@ -3064,7 +3062,7 @@
                             continue;
                         }
                     } else {
-                        // Colisão normal com inimigos
+                       
                         for (let j = gameState.enemies.length - 1; j >= 0; j--) {
                             const enemy = gameState.enemies[j];
                             const dx = shuriken.x - enemy.x;
@@ -3247,7 +3245,7 @@
                 }
             }
             
-            // Don't spawn enemies during boss waves
+            
             if (!gameState.bossActive) {
                 gameState.spawnTimer += deltaTime;
                 const spawnRate = Math.max(500, config.enemySpawnRate - gameState.wave * 50);
@@ -3573,10 +3571,10 @@
             const xpPercent = Math.min(100, (gameState.xp / gameState.xpToLevel) * 100);
             document.getElementById('xp-fill').style.width = `${xpPercent}%`;
             
-            document.getElementById('wave-info').textContent = `ONDA: ${gameState.wave}`;
+            document.getElementById('wave-info').textContent = `WAVE: ${gameState.wave}`;
             document.getElementById('score').textContent = `PONTUAÇÃO: ${gameState.score}`;
             document.getElementById('level').textContent = `NÍVEL: ${gameState.level}`;
-            document.getElementById('max-wave').textContent = `RECORDE: ${gameState.maxWaveReached}`;
+            document.getElementById('max-wave').textContent = `WAVE MÁXIMA: ${gameState.maxWaveReached}`;
             
             if (gameState.bosses.length > 0) {
                 const boss = gameState.bosses[0];
@@ -3587,9 +3585,9 @@
 
         function showGameOver() {
             document.getElementById('final-score').textContent = `PONTUAÇÃO: ${gameState.score}`;
-            document.getElementById('final-wave').textContent = `ONDA: ${gameState.wave}`;
+            document.getElementById('final-wave').textContent = `WAVE: ${gameState.wave}`;
             document.getElementById('final-level').textContent = `NÍVEL: ${gameState.level}`;
-            document.getElementById('final-max-wave').textContent = `RECORDE: ${gameState.maxWaveReached}`;
+            document.getElementById('final-max-wave').textContent = `WAVE MÁXIMA: ${gameState.maxWaveReached}`;
             document.getElementById('game-over').style.display = 'block';
         }
 
@@ -3618,7 +3616,7 @@
                 gameState.ctx.stroke();
             }
             
-            // Draw particles
+           
             gameState.particles.forEach(p => {
                 if (p instanceof ToxicCloud || p instanceof DarkMatterPool) {
                     p.draw(gameState.ctx);
@@ -3627,19 +3625,19 @@
                 }
             });
             
-            // Draw allies
+           
             gameState.allies.forEach(ally => ally.draw(gameState.ctx));
             
-            // Draw enemies
+           
             gameState.enemies.forEach(e => e.draw(gameState.ctx));
             
-            // Draw bosses
+           
             gameState.bosses.forEach(b => b.draw(gameState.ctx));
             
-            // Draw shurikens
+            
             gameState.shurikens.forEach(s => s.draw(gameState.ctx));
             
-            // Draw player
+           
             gameState.player.draw(gameState.ctx);
         }
 
