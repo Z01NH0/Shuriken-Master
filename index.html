@@ -777,8 +777,8 @@
                 
                 
                 ctx.beginPath();
-                ctx.arc(0, this.radius * 0.1, this.radius * 0.3, 0, Math.PI);
-                ctx.fillStyle = '#000';
+                ctx.arc(0, this.radius * 0.02, this.radius * 1, 0.1, Math.PI - 0.1);
+                ctx.fillStyle = '#1E40AF';
                 ctx.fill();
                 
                 
@@ -2962,7 +2962,7 @@
         function updateGame(deltaTime) {
             gameState.player.update(deltaTime);
             
-            // Update allies
+           
             for (let i = gameState.allies.length - 1; i >= 0; i--) {
                 gameState.allies[i].update(deltaTime);
                 if (gameState.allies[i].health <= 0) {
