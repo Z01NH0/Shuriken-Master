@@ -20,6 +20,15 @@
             font-family: 'Arial', sans-serif;
             background-color: #000;
             color: white;
+            background: linear-gradient(135deg, #0a0a2a, #1a1a3a, #2a2a4a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         #loading-screen {
@@ -34,6 +43,8 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><path fill="%23333" d="M0 0h50v50H0z"/></svg>');
+            background-size: 10px 10px;
         }
         
         #loading-bar {
@@ -42,12 +53,15 @@
             border: 2px solid #ff0000;
             margin-top: 20px;
             position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px #ff0000;
         }
         
         #loading-progress {
             height: 100%;
             width: 0%;
-            background-color: #ff0000;
+            background: linear-gradient(90deg, #ff0000, #ff3333);
             transition: width 0.1s;
         }
         
@@ -56,7 +70,13 @@
             font-size: 24px;
             margin-bottom: 20px;
             color: #fff;
-            text-shadow: 0 0 10px #ff0000;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+            animation: pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
+            to { text-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff3333; }
         }
         
         #main-menu {
@@ -65,21 +85,29 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.85);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 999;
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><path fill="%23222" d="M0 0h50v50H0z"/></svg>');
+            background-size: 10px 10px;
         }
         
         #game-title {
             font-family: 'Black Ops One', cursive;
             font-size: 72px;
             color: #ff0000;
-            text-shadow: 0 0 10px #ff3333, 0 0 20px #ff0000;
+            text-shadow: 0 0 10px #ff3333, 0 0 20px #ff0000, 0 0 30px #ff0000;
             margin-bottom: 50px;
             letter-spacing: 3px;
+            animation: titleGlow 2s infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            from { text-shadow: 0 0 10px #ff3333, 0 0 20px #ff0000, 0 0 30px #ff0000; }
+            to { text-shadow: 0 0 15px #ff3333, 0 0 25px #ff0000, 0 0 40px #ff0000, 0 0 50px #ff5555; }
         }
         
         .menu-button {
@@ -87,7 +115,7 @@
             margin: 10px;
             font-size: 24px;
             font-family: 'Press Start 2P', cursive;
-            background-color: #333;
+            background: linear-gradient(145deg, #222, #444);
             color: white;
             border: 3px solid #ff0000;
             border-radius: 10px;
@@ -95,11 +123,13 @@
             transition: all 0.3s;
             width: 300px;
             text-align: center;
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
         }
         
         .menu-button:hover {
-            background-color: #ff0000;
+            background: linear-gradient(145deg, #ff0000, #ff3333);
             transform: scale(1.05);
+            box-shadow: 0 7px 20px rgba(255, 0, 0, 0.5);
         }
         
         #skin-selection {
@@ -123,18 +153,21 @@
             padding: 10px;
             cursor: pointer;
             transition: all 0.3s;
-            background-color: #222;
+            background: linear-gradient(145deg, #222, #333);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
         }
         
         .skin-option:hover {
             border-color: #ff0000;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 0, 0, 0.3);
         }
         
         .skin-option.selected {
             border-color: #00ff00;
-            box-shadow: 0 0 15px #00ff00;
+            box-shadow: 0 0 15px #00ff00, 0 0 25px #00ff00;
         }
         
         .skin-option.locked {
@@ -165,6 +198,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
         }
         
         .skin-name {
@@ -173,6 +207,7 @@
             text-align: center;
             margin-bottom: 5px;
             color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
         
         .skin-description {
@@ -191,7 +226,9 @@
         
         canvas {
             display: block;
-            border: 3px solid red;
+            border: 3px solid #ff0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            border-radius: 5px;
         }
         
         #ui {
@@ -205,6 +242,7 @@
             border: 2px solid #ff0000;
             font-family: 'Press Start 2P', cursive;
             font-size: 14px;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
         }
         
         #health-bar {
@@ -215,6 +253,7 @@
             margin-bottom: 5px;
             position: relative;
             overflow: hidden;
+            border-radius: 5px;
         }
         
         #health-fill {
@@ -222,6 +261,7 @@
             width: 100%;
             background: linear-gradient(to right, #ff0000, #ff3333);
             transition: width 0.3s;
+            border-radius: 3px;
         }
         
         #health-text {
@@ -240,6 +280,8 @@
             background-color: #333;
             border: 2px solid #555;
             margin-bottom: 5px;
+            border-radius: 5px;
+            overflow: hidden;
         }
         
         #xp-fill {
@@ -247,29 +289,34 @@
             width: 0%;
             background: linear-gradient(to right, #00ff00, #33ff33);
             transition: width 0.3s;
+            border-radius: 3px;
         }
         
         #wave-info {
             font-size: 18px;
             margin-bottom: 5px;
             color: #ffcc00;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
         }
         
         #score {
             font-size: 18px;
             margin-bottom: 5px;
             color: #ffffff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
         
         #level {
             font-size: 18px;
             margin-bottom: 5px;
             color: #00ccff;
+            text-shadow: 0 0 5px rgba(0, 204, 255, 0.5);
         }
         
         #max-wave {
             font-size: 16px;
             color: #ff9900;
+            text-shadow: 0 0 5px rgba(255, 153, 0, 0.5);
         }
         
         #powerups {
@@ -284,6 +331,7 @@
             pointer-events: auto;
             max-width: 400px;
             font-family: 'Press Start 2P', cursive;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
         }
         
         #powerups h3 {
@@ -291,21 +339,24 @@
             margin-bottom: 10px;
             text-align: center;
             font-size: 16px;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
         
         .powerup-option {
             padding: 8px;
             margin: 5px;
-            background-color: #333;
+            background: linear-gradient(145deg, #222, #333);
             border: 1px solid #555;
             cursor: pointer;
             transition: background-color 0.2s;
             font-size: 12px;
+            border-radius: 5px;
         }
         
         .powerup-option:hover {
-            background-color: #555;
+            background: linear-gradient(145deg, #333, #444);
             border-color: #00ff00;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
         
         .powerup-option strong {
@@ -321,6 +372,9 @@
             background-color: #333;
             border: 3px solid #ff0000;
             display: none;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
         }
         
         #boss-health-fill {
@@ -354,6 +408,9 @@
             font-family: 'Press Start 2P', cursive;
             max-width: 500px;
             width: 90%;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"><rect fill="%23000" width="50" height="50"/><path fill="%23222" d="M0 0h25v25H0z"/></svg>');
+            background-size: 10px 10px;
         }
         
         #game-over h2 {
@@ -367,23 +424,27 @@
             font-size: 18px;
             margin: 10px 0;
             color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
         
         #final-score {
             color: #ffcc00;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
         }
         
         #final-wave {
             color: #00ccff;
+            text-shadow: 0 0 5px rgba(0, 204, 255, 0.5);
         }
         
         #final-level {
             color: #00ff00;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
         
         #restart-btn {
             padding: 15px 30px;
-            background-color: #ff3333;
+            background: linear-gradient(145deg, #ff3333, #ff5555);
             border: none;
             color: white;
             font-size: 18px;
@@ -392,11 +453,13 @@
             margin-top: 20px;
             font-family: 'Press Start 2P', cursive;
             transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
         }
         
         #restart-btn:hover {
-            background-color: #ff5555;
+            background: linear-gradient(145deg, #ff5555, #ff7777);
             transform: scale(1.05);
+            box-shadow: 0 7px 20px rgba(255, 0, 0, 0.5);
         }
         
         #controls {
@@ -409,6 +472,7 @@
             font-size: 14px;
             border: 2px solid #555;
             font-family: 'Press Start 2P', cursive;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
         
         #controls p {
@@ -428,12 +492,13 @@
             padding: 10px;
             border-radius: 10px;
             border: 2px solid #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
         }
         
         .powerup-btn {
             width: 50px;
             height: 50px;
-            background-color: rgba(0, 0, 0, 0.7);
+            background: linear-gradient(145deg, #222, #333);
             border: 2px solid #00ff00;
             color: white;
             font-size: 20px;
@@ -448,8 +513,9 @@
         }
         
         .powerup-btn:hover {
-            background-color: rgba(0, 255, 0, 0.3);
+            background: linear-gradient(145deg, rgba(0, 255, 0, 0.3), rgba(0, 255, 0, 0.5));
             transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
         
         #ally-indicator {
@@ -464,12 +530,81 @@
             font-size: 12px;
             color: #fff;
             display: none;
+            box-shadow: 0 0 10px rgba(142, 68, 173, 0.5);
+        }
+        
+        #level-up-notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 32px;
+            color: #00ff00;
+            text-align: center;
+            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+        }
+        
+        #wave-notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 32px;
+            color: #ffcc00;
+            text-align: center;
+            text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffcc00;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #ffcc00;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.7);
+        }
+        
+        .status-effect {
+            position: absolute;
+            bottom: 200px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            display: none;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        
+        #burn-effect {
+            border: 2px solid #ff5500;
+            color: #ff5500;
+        }
+        
+        #shock-effect {
+            border: 2px solid #00aaff;
+            color: #00aaff;
+        }
+        
+        #slow-effect {
+            border: 2px solid #5500ff;
+            color: #5500ff;
         }
     </style>
 </head>
 <body>
     <div id="loading-screen">
-        <div id="loading-text">   CARREGANDO...</div>
+        <div id="loading-text">CARREGANDO...</div>
         <div id="loading-bar">
             <div id="loading-progress"></div>
         </div>
@@ -480,9 +615,9 @@
         
         <div id="skin-selection">
             <div class="skin-option selected" data-skin="classic">
-                <div class="skin-preview" style="background-color: #333; border: 3px solid #fff;">
-                    <div style="width: 60px; height: 60px; background-color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                        <div style="width: 50px; height: 50px; background-color: #333; border-radius: 50%; border: 2px solid #fff;"></div>
+                <div class="skin-preview" style="background: linear-gradient(145deg, #333, #555); border: 3px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5);">
+                    <div style="width: 60px; height: 60px; background: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2);">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(145deg, #333, #555); border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 5px rgba(255,255,255,0.5);"></div>
                     </div>
                 </div>
                 <div class="skin-name">NINJA</div>
@@ -491,9 +626,9 @@
             </div>
             
             <div class="skin-option locked" data-skin="desolated" data-unlock-wave="6">
-                <div class="skin-preview" style="background-color: #5d4037; border: 3px solid #8d6e63;">
-                    <div style="width: 60px; height: 60px; background-color: #3e2723; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                        <div style="width: 50px; height: 50px; background-color: #5d4037; border-radius: 50%; border: 2px solid #8d6e63;"></div>
+                <div class="skin-preview" style="background: linear-gradient(145deg, #5d4037, #8d6e63); border: 3px solid #8d6e63; box-shadow: 0 0 10px rgba(141,110,99,0.5);">
+                    <div style="width: 60px; height: 60px; background: #3e2723; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2);">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(145deg, #5d4037, #8d6e63); border-radius: 50%; border: 2px solid #8d6e63; box-shadow: 0 0 5px rgba(141,110,99,0.5);"></div>
                     </div>
                 </div>
                 <div class="skin-name">NINJA DESOLADO</div>
@@ -502,9 +637,9 @@
             </div>
             
             <div class="skin-option locked" data-skin="shadow" data-unlock-wave="11">
-                <div class="skin-preview" style="background-color: #263238; border: 3px solid #37474f;">
-                    <div style="width: 60px; height: 60px; background-color: #102027; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                        <div style="width: 50px; height: 50px; background-color: #263238; border-radius: 50%; border: 2px solid #37474f;"></div>
+                <div class="skin-preview" style="background: linear-gradient(145deg, #263238, #37474f); border: 3px solid #37474f; box-shadow: 0 0 10px rgba(55,71,79,0.5);">
+                    <div style="width: 60px; height: 60px; background: #102027; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2);">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(145deg, #263238, #37474f); border-radius: 50%; border: 2px solid #37474f; box-shadow: 0 0 5px rgba(55,71,79,0.5);"></div>
                     </div>
                 </div>
                 <div class="skin-name">NINJA DAS SOMBRAS</div>
@@ -513,9 +648,9 @@
             </div>
             
             <div class="skin-option locked" data-skin="grandmaster" data-unlock-wave="16">
-                <div class="skin-preview" style="background-color: #004d40; border: 3px solid #00796b;">
-                    <div style="width: 60px; height: 60px; background-color: #00251a; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                        <div style="width: 50px; height: 50px; background-color: #004d40; border-radius: 50%; border: 2px solid #00796b;"></div>
+                <div class="skin-preview" style="background: linear-gradient(145deg, #004d40, #00796b); border: 3px solid #00796b; box-shadow: 0 0 10px rgba(0,121,107,0.5);">
+                    <div style="width: 60px; height: 60px; background: #00251a; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2);">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(145deg, #004d40, #00796b); border-radius: 50%; border: 2px solid #00796b; box-shadow: 0 0 5px rgba(0,121,107,0.5);"></div>
                     </div>
                 </div>
                 <div class="skin-name">GRÃO MESTRE</div>
@@ -524,9 +659,9 @@
             </div>
             
             <div class="skin-option locked" data-skin="godslayer" data-unlock-wave="21">
-                <div class="skin-preview" style="background: linear-gradient(45deg, #8e44ad, #9b59b6); border: 3px solid #5b2c6f;">
-                    <div style="width: 60px; height: 60px; background-color: #2c3e50; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
-                        <div style="width: 50px; height: 50px; background: linear-gradient(45deg, #8e44ad, #9b59b6); border-radius: 50%; border: 2px solid #5b2c6f;"></div>
+                <div class="skin-preview" style="background: linear-gradient(45deg, #8e44ad, #9b59b6); border: 3px solid #5b2c6f; box-shadow: 0 0 10px rgba(91,44,111,0.5);">
+                    <div style="width: 60px; height: 60px; background: #2c3e50; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2);">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(45deg, #8e44ad, #9b59b6); border-radius: 50%; border: 2px solid #5b2c6f; box-shadow: 0 0 5px rgba(91,44,111,0.5);"></div>
                     </div>
                 </div>
                 <div class="skin-name">MOLESTADOR DE DEUSES</div>
@@ -573,6 +708,26 @@
     
     <div id="ally-indicator">
         ALIADOS: 0
+    </div>
+    
+    <div id="level-up-notification">
+        NÍVEL ALCANÇADO!
+    </div>
+    
+    <div id="wave-notification">
+        WAVE 1
+    </div>
+    
+    <div id="burn-effect" class="status-effect">
+        QUEIMANDO: 0s
+    </div>
+    
+    <div id="shock-effect" class="status-effect">
+        ELETRIFICADO: 0s
+    </div>
+    
+    <div id="slow-effect" class="status-effect">
+        LENTIDÃO: 0s
     </div>
     
     <div id="game-over">
@@ -642,11 +797,16 @@
             dragonFuryActive: false,
             dragonFuryEndTime: 0,
             lastOmniSlashTime: 0,
-            maxWaveReached: 0,
+            maxWaveReached: localStorage.getItem('shurikenMasterMaxWave') ? parseInt(localStorage.getItem('shurikenMasterMaxWave')) : 0,
             selectedSkin: 'classic',
             allies: [],
             lastAllySpawn: 0,
-            allySpawnCooldown: 10000
+            allySpawnCooldown: 10000,
+            playerEffects: {
+                burning: { active: false, endTime: 0 },
+                shocked: { active: false, endTime: 0 },
+                slowed: { active: false, endTime: 0 }
+            }
         };
 
         class Player {
@@ -658,16 +818,10 @@
                 this.maxHealth = config.playerHealth;
                 this.speed = config.playerSpeed;
                 this.angle = 0;
-                this.burning = null;
-                this.shocked = false;
-                this.shockTimer = 0;
-                this.slowed = false;
-                this.slowTimer = 0;
-                this.originalSpeed = this.speed;
-                this.lastMoveTime = 0;
                 this.color = '#333';
                 this.borderColor = '#fff';
                 this.skin = 'classic';
+                this.originalSpeed = this.speed;
             }
 
             update(deltaTime) {
@@ -694,7 +848,7 @@
                     moveY *= 0.7071;
                 }
 
-                const effectiveSpeed = this.slowed ? this.speed * 0.7 : this.speed;
+                const effectiveSpeed = gameState.playerEffects.slowed.active ? this.speed * 0.7 : this.speed;
                 this.x += moveX * effectiveSpeed;
                 this.y += moveY * effectiveSpeed;
 
@@ -704,34 +858,50 @@
 
                 this.angle = Math.atan2(gameState.mouse.y - this.y, gameState.mouse.x - this.x);
                 
-                if (this.burning) {
-                    this.burning.timer += deltaTime;
-                    if (this.burning.timer >= 1000) {
-                        this.takeDamage(this.burning.damage);
-                        this.burning.timer = 0;
-                    }
-                    if (this.burning.timer >= this.burning.duration) {
-                        this.burning = null;
+                if (gameState.playerEffects.burning.active) {
+                    if (Date.now() >= gameState.playerEffects.burning.endTime) {
+                        gameState.playerEffects.burning.active = false;
+                        document.getElementById('burn-effect').style.display = 'none';
+                    } else {
+                        const burnTimer = document.getElementById('burn-effect');
+                        const remaining = Math.ceil((gameState.playerEffects.burning.endTime - Date.now()) / 1000);
+                        burnTimer.textContent = `QUEIMANDO: ${remaining}s`;
+                        burnTimer.style.display = 'block';
+                        
+                        if (Date.now() % 1000 < 100) {
+                            this.takeDamage(2);
+                            createParticles(this.x, this.y, 3, '#ff5500');
+                        }
                     }
                 }
                 
-                if (this.shocked) {
-                    this.shockTimer += deltaTime;
-                    if (this.shockTimer >= 500) {
-                        this.takeDamage(2);
-                        this.shockTimer = 0;
-                    }
-                    if (this.shockTimer >= this.shockDuration) {
-                        this.shocked = false;
+                if (gameState.playerEffects.shocked.active) {
+                    if (Date.now() >= gameState.playerEffects.shocked.endTime) {
+                        gameState.playerEffects.shocked.active = false;
                         this.speed = this.originalSpeed;
+                        document.getElementById('shock-effect').style.display = 'none';
+                    } else {
+                        const shockTimer = document.getElementById('shock-effect');
+                        const remaining = Math.ceil((gameState.playerEffects.shocked.endTime - Date.now()) / 1000);
+                        shockTimer.textContent = `ELETRIFICADO: ${remaining}s`;
+                        shockTimer.style.display = 'block';
+                        
+                        if (Date.now() % 500 < 100) {
+                            this.takeDamage(2);
+                        }
                     }
                 }
-
-                if (this.slowed) {
-                    this.slowTimer += deltaTime;
-                    if (this.slowTimer >= 3000) {
-                        this.slowed = false;
+                
+                if (gameState.playerEffects.slowed.active) {
+                    if (Date.now() >= gameState.playerEffects.slowed.endTime) {
+                        gameState.playerEffects.slowed.active = false;
                         this.speed = this.originalSpeed;
+                        document.getElementById('slow-effect').style.display = 'none';
+                    } else {
+                        const slowTimer = document.getElementById('slow-effect');
+                        const remaining = Math.ceil((gameState.playerEffects.slowed.endTime - Date.now()) / 1000);
+                        slowTimer.textContent = `LENTIDÃO: ${remaining}s`;
+                        slowTimer.style.display = 'block';
                     }
                 }
             }
@@ -741,24 +911,39 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
-                
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 
-                if (this.shocked) {
-                    ctx.fillStyle = '#00f';
+                if (gameState.playerEffects.shocked.active) {
+                    ctx.fillStyle = '#00aaff';
                     for (let i = 0; i < 5; i++) {
                         const angle = Math.random() * Math.PI * 2;
                         const dist = Math.random() * this.radius * 1.5;
                         ctx.beginPath();
                         ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, 2, 0, Math.PI * 2);
-                        ctx.fillStyle = '#0ff';
+                        ctx.fillStyle = '#00ffff';
                         ctx.fill();
                     }
-                } else if (this.burning) {
-                    ctx.fillStyle = '#f80';
-                } else if (this.slowed) {
-                    ctx.fillStyle = '#00f';
+                } else if (gameState.playerEffects.burning.active) {
+                    ctx.fillStyle = '#ff5500';
+                    for (let i = 0; i < 3; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * this.radius * 1.2;
+                        ctx.beginPath();
+                        ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffaa00';
+                        ctx.fill();
+                    }
+                } else if (gameState.playerEffects.slowed.active) {
+                    ctx.fillStyle = '#5500ff';
+                    for (let i = 0; i < 3; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * this.radius * 1.2;
+                        ctx.beginPath();
+                        ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = '#aa00ff';
+                        ctx.fill();
+                    }
                 } else {
                     ctx.fillStyle = this.color;
                 }
@@ -768,22 +953,18 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-
                 ctx.beginPath();
                 ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 
-                
                 ctx.beginPath();
                 ctx.arc(0, this.radius * 0.02, this.radius * 1, 0.1, Math.PI - 0.1);
                 ctx.fillStyle = '#1E40AF';
                 ctx.fill();
                 
-                
                 if (this.skin === 'desolated') {
-                   
                     ctx.strokeStyle = '#5d4037';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
@@ -796,13 +977,11 @@
                     ctx.lineTo(this.radius * 0.5, -this.radius * 0.1);
                     ctx.lineTo(this.radius * 0.2, this.radius * 0.3);
                     ctx.stroke();
-                  
-                } else if (this.skin === 'shadow') {         
+                } else if (this.skin === 'shadow') {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                     ctx.beginPath();
                     ctx.arc(0, this.radius * 0.5, this.radius * 0.5, Math.PI, Math.PI * 2);
                     ctx.fill();
-                  
                 } else if (this.skin === 'grandmaster') {
                     ctx.fillStyle = '#00796b';
                     ctx.beginPath();
@@ -811,7 +990,6 @@
                     ctx.lineTo(this.radius * 0.3, this.radius * 0.1);
                     ctx.closePath();
                     ctx.fill();
-                  
                 } else if (this.skin === 'godslayer') {
                     ctx.fillStyle = '#5b2c6f';
                     ctx.beginPath();
@@ -843,27 +1021,21 @@
                 updateHealthText();
             }
             
-            applyBurn(damage, duration) {
-                this.burning = { damage, duration: 3000, timer: 0 };
+            applyBurn(duration = 3000) {
+                gameState.playerEffects.burning.active = true;
+                gameState.playerEffects.burning.endTime = Date.now() + duration;
             }
             
-            applyShock(duration) {
-                this.shocked = true;
-                this.shockTimer = 0;
-                this.shockDuration = 3000; 
+            applyShock(duration = 3000) {
+                gameState.playerEffects.shocked.active = true;
+                gameState.playerEffects.shocked.endTime = Date.now() + duration;
                 this.speed = this.originalSpeed * 0.7;
-                
-                Shuriken.prototype.damage *= 0.6;
-                setTimeout(() => {
-                    Shuriken.prototype.damage /= 0.6;
-                }, this.shockDuration);
             }
 
-            applySlow(amount, duration) {
-                this.slowed = true;
-                this.slowTimer = 0;
-                this.speed = this.originalSpeed * (1 - amount);
-                this.slowDuration = duration;
+            applySlow(duration = 3000) {
+                gameState.playerEffects.slowed.active = true;
+                gameState.playerEffects.slowed.endTime = Date.now() + duration;
+                this.speed = this.originalSpeed * 0.7;
             }
             
             setSkin(skin) {
@@ -876,30 +1048,30 @@
                     case 'desolated':
                         this.color = '#5d4037';
                         this.borderColor = '#8d6e63';
-                        config.shurikenCooldown = 450 * 0.7; 
+                        config.shurikenCooldown = 450 * 0.7;
                         break;
                     case 'shadow':
                         this.color = '#263238';
                         this.borderColor = '#37474f';
-                        gameState.damageMultiplier = 1.3; 
+                        gameState.damageMultiplier = 1.3;
                         Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
                         break;
                     case 'grandmaster':
                         this.color = '#004d40';
                         this.borderColor = '#00796b';
-                        config.shurikenCooldown = 450 * 0.8; 
+                        config.shurikenCooldown = 450 * 0.8;
                         gameState.damageMultiplier = 1.2;
                         Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
-                        this.maxHealth = config.playerHealth * 1.30; 
+                        this.maxHealth = config.playerHealth * 1.30;
                         this.health = this.maxHealth;
                         break;
                     case 'godslayer':
                         this.color = '#8e44ad';
                         this.borderColor = '#5b2c6f';
-                        config.shurikenCooldown = 450 * 0.6; 
-                        gameState.damageMultiplier = 1.25; 
+                        config.shurikenCooldown = 450 * 0.6;
+                        gameState.damageMultiplier = 1.25;
                         Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
-                        this.maxHealth = config.playerHealth * 1.5; 
+                        this.maxHealth = config.playerHealth * 1.5;
                         this.health = this.maxHealth;
                         break;
                 }
@@ -923,7 +1095,6 @@
             }
 
             update(deltaTime) {
-                
                 if (!this.target || this.target.health <= 0) {
                     let closestDist = Infinity;
                     for (const enemy of gameState.enemies) {
@@ -937,7 +1108,6 @@
                     }
                 }
 
-               
                 if (this.target) {
                     const dx = this.target.x - this.x;
                     const dy = this.target.y - this.y;
@@ -948,7 +1118,6 @@
                         this.y += (dy / dist) * this.speed;
                     }
 
-                   
                     this.lastAttack += deltaTime;
                     if (dist < this.radius + this.target.radius && this.lastAttack >= this.attackCooldown) {
                         this.target.takeDamage(this.damage);
@@ -956,7 +1125,6 @@
                         this.lastAttack = 0;
                     }
                 } else {
-                   
                     if (Math.random() < 0.02) {
                         this.angle = Math.random() * Math.PI * 2;
                     }
@@ -964,7 +1132,6 @@
                     this.y += Math.sin(this.angle) * this.speed * 0.5;
                 }
 
-              
                 const borderBuffer = 5;
                 this.x = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.width - this.radius - borderBuffer, this.x));
                 this.y = Math.max(this.radius + borderBuffer, Math.min(gameState.canvas.height - this.radius - borderBuffer, this.y));
@@ -974,7 +1141,6 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 
-               
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 
@@ -988,20 +1154,17 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-               
                 ctx.beginPath();
                 ctx.arc(-this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.arc(this.radius * 0.3, -this.radius * 0.2, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 
-                
                 ctx.beginPath();
                 ctx.arc(0, this.radius * 0.1, this.radius * 0.3, 0.1, Math.PI - 0.1);
                 ctx.fillStyle = '#000';
                 ctx.fill();
                 
-              
                 if (this.health < this.maxHealth) {
                     const healthPercent = this.health / this.maxHealth;
                     ctx.fillStyle = '#f00';
@@ -1033,12 +1196,29 @@
                 this.stone = false;
                 this.critical = false;
                 this.pinkPiercing = false;
+                this.trailParticles = [];
             }
 
             update(deltaTime) {
                 this.x += Math.cos(this.angle) * this.speed;
                 this.y += Math.sin(this.angle) * this.speed;
                 this.lifetime -= deltaTime;
+
+                if (this.lifetime % 100 < 20) {
+                    this.trailParticles.push({
+                        x: this.x,
+                        y: this.y,
+                        size: Math.random() * 2 + 1,
+                        lifetime: 300
+                    });
+                }
+
+                for (let i = this.trailParticles.length - 1; i >= 0; i--) {
+                    this.trailParticles[i].lifetime -= deltaTime;
+                    if (this.trailParticles[i].lifetime <= 0) {
+                        this.trailParticles.splice(i, 1);
+                    }
+                }
 
                 const borderBuffer = 5;
                 if (this.x < borderBuffer || this.x > gameState.canvas.width - borderBuffer || 
@@ -1048,6 +1228,20 @@
             }
 
             draw(ctx) {
+                for (const particle of this.trailParticles) {
+                    const alpha = particle.lifetime / 300;
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = this.explosive ? '#ff8800' : 
+                                  this.ice ? '#00ffff' : 
+                                  this.atomic ? '#ff00ff' : 
+                                  this.stone ? '#8B4513' : 
+                                  this.pinkPiercing ? '#FF69B4' : '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+                
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle + Math.PI/4);
@@ -1056,17 +1250,17 @@
                 let strokeColor = '#f00';
                 
                 if (this.explosive) {
-                    fillColor = '#f80';
-                    strokeColor = '#f00';
+                    fillColor = '#ff8800';
+                    strokeColor = '#ff5500';
                 } else if (this.ice) {
-                    fillColor = '#0ff';
-                    strokeColor = '#00f';
+                    fillColor = '#00ffff';
+                    strokeColor = '#0088ff';
                 } else if (this.atomic) {
-                    fillColor = '#f0f';
-                    strokeColor = '#0f0';
+                    fillColor = '#ff00ff';
+                    strokeColor = '#aa00aa';
                 } else if (this.stone) {
                     fillColor = '#8B4513';
-                    strokeColor = '#A0522D';
+                    strokeColor = '#5D4037';
                 } else if (this.pinkPiercing) {
                     fillColor = '#FF69B4';
                     strokeColor = '#FF1493';
@@ -1078,17 +1272,30 @@
                 ctx.lineTo(0, this.radius);
                 ctx.lineTo(-this.radius, 0);
                 ctx.closePath();
-                ctx.fillStyle = fillColor;
+                
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 1.5);
+                gradient.addColorStop(0, fillColor);
+                gradient.addColorStop(1, strokeColor);
+                
+                ctx.fillStyle = gradient;
                 ctx.fill();
                 
                 if (this.critical) {
-                    ctx.strokeStyle = '#f00';
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 2;
                 } else {
                     ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = 1;
                 }
                 
-                ctx.lineWidth = 1;
                 ctx.stroke();
+                
+                if (this.atomic) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                }
                 
                 ctx.restore();
             }
@@ -1103,15 +1310,39 @@
                 this.radius = 12;
                 this.damage = 2;
                 this.lifetime = 2000;
+                this.trail = [];
             }
 
             update(deltaTime) {
                 this.x += Math.cos(this.angle) * this.speed;
                 this.y += Math.sin(this.angle) * this.speed;
                 this.lifetime -= deltaTime;
+                
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > 5) this.trail.shift();
             }
 
             draw(ctx) {
+                for (let i = 0; i < this.trail.length; i++) {
+                    const alpha = i / this.trail.length;
+                    const size = this.radius * alpha;
+                    
+                    ctx.globalAlpha = alpha * 0.5;
+                    ctx.beginPath();
+                    ctx.arc(this.trail[i].x, this.trail[i].y, size, 0, Math.PI * 2);
+                    
+                    const gradient = ctx.createRadialGradient(
+                        this.trail[i].x, this.trail[i].y, 0, 
+                        this.trail[i].x, this.trail[i].y, size
+                    );
+                    gradient.addColorStop(0, `rgba(255, 150, 0, ${alpha})`);
+                    gradient.addColorStop(1, `rgba(255, 50, 0, ${alpha * 0.5})`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+                
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
@@ -1134,6 +1365,112 @@
             }
         }
 
+        class ThunderProjectile {
+            constructor(x, y, angle) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = 8;
+                this.width = 120;
+                this.height = 15;
+                this.damage = 11;
+                this.lifetime = 3000;
+                this.distanceTraveled = 0;
+                this.segments = [];
+                this.createSegments();
+            }
+            
+            createSegments() {
+                const numSegments = 5;
+                const segmentLength = this.width / numSegments;
+                
+                for (let i = 0; i < numSegments; i++) {
+                    const offsetX = (Math.random() - 0.5) * 20;
+                    const offsetY = (Math.random() - 0.5) * 20;
+                    
+                    this.segments.push({
+                        x: this.x + Math.cos(this.angle) * (i * segmentLength),
+                        y: this.y + Math.sin(this.angle) * (i * segmentLength),
+                        offsetX: offsetX,
+                        offsetY: offsetY
+                    });
+                }
+            }
+
+            update(deltaTime) {
+                const moveX = Math.cos(this.angle) * this.speed;
+                const moveY = Math.sin(this.angle) * this.speed;
+                
+                this.x += moveX;
+                this.y += moveY;
+                this.distanceTraveled += Math.sqrt(moveX * moveX + moveY * moveY);
+                this.lifetime -= deltaTime;
+                
+                for (let i = 0; i < this.segments.length; i++) {
+                    this.segments[i].x += moveX;
+                    this.segments[i].y += moveY;
+                    
+                    if (this.lifetime % 200 < 20) {
+                        this.segments[i].offsetX = (Math.random() - 0.5) * 20;
+                        this.segments[i].offsetY = (Math.random() - 0.5) * 20;
+                    }
+                }
+                
+                const player = gameState.player;
+                const playerLeft = player.x - player.radius;
+                const playerRight = player.x + player.radius;
+                const playerTop = player.y - player.radius;
+                const playerBottom = player.y + player.radius;
+                
+                const projLeft = this.x - this.width/2;
+                const projRight = this.x + this.width/2;
+                const projTop = this.y - this.height/2;
+                const projBottom = this.y + this.height/2;
+                
+                if (projRight > playerLeft && projLeft < playerRight &&
+                    projBottom > playerTop && projTop < playerBottom) {
+                    player.takeDamage(this.damage);
+                    player.applyShock(3000);
+                    this.lifetime = 0;
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                
+                ctx.beginPath();
+                ctx.moveTo(this.segments[0].x + this.segments[0].offsetX, this.segments[0].y + this.segments[0].offsetY);
+                
+                for (let i = 1; i < this.segments.length; i++) {
+                    ctx.lineTo(this.segments[i].x + this.segments[i].offsetX, this.segments[i].y + this.segments[i].offsetY);
+                }
+                
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(this.segments[0].x + this.segments[0].offsetX, this.segments[0].y + this.segments[0].offsetY);
+                
+                for (let i = 1; i < this.segments.length; i++) {
+                    ctx.lineTo(this.segments[i].x + this.segments[i].offsetX, this.segments[i].y + this.segments[i].offsetY);
+                }
+                
+                ctx.strokeStyle = '#0088ff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                for (let i = 0; i < this.segments.length; i++) {
+                    ctx.beginPath();
+                    ctx.arc(this.segments[i].x + this.segments[i].offsetX, this.segments[i].y + this.segments[i].offsetY, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#00ffff';
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+
         class DarkMatterProjectile {
             constructor(x, y, angle) {
                 this.x = x;
@@ -1144,15 +1481,39 @@
                 this.damage = 10;
                 this.lifetime = 3000;
                 this.onlyPlayerCollision = true;
+                this.trail = [];
             }
 
             update(deltaTime) {
                 this.x += Math.cos(this.angle) * this.speed;
                 this.y += Math.sin(this.angle) * this.speed;
                 this.lifetime -= deltaTime;
+                
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > 8) this.trail.shift();
             }
 
             draw(ctx) {
+                for (let i = 0; i < this.trail.length; i++) {
+                    const alpha = i / this.trail.length;
+                    const size = this.radius * alpha;
+                    
+                    ctx.globalAlpha = alpha * 0.3;
+                    ctx.beginPath();
+                    ctx.arc(this.trail[i].x, this.trail[i].y, size, 0, Math.PI * 2);
+                    
+                    const gradient = ctx.createRadialGradient(
+                        this.trail[i].x, this.trail[i].y, 0, 
+                        this.trail[i].x, this.trail[i].y, size
+                    );
+                    gradient.addColorStop(0, `rgba(142, 68, 173, ${alpha})`);
+                    gradient.addColorStop(1, `rgba(44, 62, 80, ${alpha * 0.5})`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+                
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 
@@ -1164,6 +1525,11 @@
                 gradient.addColorStop(1, '#8e44ad');
                 
                 ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
                 ctx.fill();
                 
                 ctx.restore();
@@ -1221,6 +1587,7 @@
                 
                 if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
                     gameState.player.takeDamage(this.damage);
+                    gameState.player.applyBurn(3000);
                     this.lastAttack = 0;
                 }
             }
@@ -1228,7 +1595,12 @@
             draw(ctx) {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
+                
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                gradient.addColorStop(0, '#ffaa00');
+                gradient.addColorStop(1, '#ff5500');
+                
+                ctx.fillStyle = gradient;
                 ctx.fill();
                 
                 if (this.stunned) {
@@ -1247,7 +1619,7 @@
                 ctx.lineTo(this.x - this.radius * 1.5, this.y - this.radius * 0.8);
                 ctx.lineTo(this.x - this.radius * 1.5, this.y + this.radius * 0.8);
                 ctx.closePath();
-                ctx.fillStyle = '#f60';
+                ctx.fillStyle = '#ff6600';
                 ctx.fill();
                 
                 ctx.beginPath();
@@ -1257,7 +1629,7 @@
                 
                 ctx.beginPath();
                 ctx.arc(this.x + this.radius * 0.8, this.y, this.radius * 0.3, 0.1, Math.PI - 0.1);
-                ctx.fillStyle = '#f00';
+                ctx.fillStyle = '#ff0000';
                 ctx.fill();
             }
 
@@ -1270,70 +1642,6 @@
                 this.stunned = true;
                 this.stunTimer = 0;
                 this.stunDuration = duration;
-            }
-        }
-
-        class ThunderProjectile {
-            constructor(x, y, angle) {
-                this.x = x;
-                this.y = y;
-                this.angle = angle;
-                this.speed = 8;
-                this.width = 120;
-                this.height = 15;
-                this.damage = 11;
-                this.lifetime = 3000;
-                this.distanceTraveled = 0;
-            }
-
-            update(deltaTime) {
-                const moveX = Math.cos(this.angle) * this.speed;
-                const moveY = Math.sin(this.angle) * this.speed;
-                
-                this.x += moveX;
-                this.y += moveY;
-                this.distanceTraveled += Math.sqrt(moveX * moveX + moveY * moveY);
-                this.lifetime -= deltaTime;
-                
-                const player = gameState.player;
-                const playerLeft = player.x - player.radius;
-                const playerRight = player.x + player.radius;
-                const playerTop = player.y - player.radius;
-                const playerBottom = player.y + player.radius;
-                
-                const projLeft = this.x - this.width/2;
-                const projRight = this.x + this.width/2;
-                const projTop = this.y - this.height/2;
-                const projBottom = this.y + this.height/2;
-                
-                if (projRight > playerLeft && projLeft < playerRight &&
-                    projBottom > playerTop && projTop < playerBottom) {
-                    player.takeDamage(this.damage);
-                    player.applyShock(3000); 
-                    this.lifetime = 0;
-                }
-            }
-
-            draw(ctx) {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle);
-                
-                ctx.fillStyle = '#0af';
-                ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
-                
-                ctx.strokeStyle = '#0ff';
-                ctx.lineWidth = 2;
-                
-                for (let i = 0; i < 5; i++) {
-                    const offset = (Math.random() - 0.5) * 10;
-                    ctx.beginPath();
-                    ctx.moveTo(-this.width/2 + offset, -this.height/2);
-                    ctx.lineTo(this.width/2 + offset, this.height/2);
-                    ctx.stroke();
-                }
-                
-                ctx.restore();
             }
         }
 
@@ -1357,7 +1665,7 @@
                 
                 if (dist < this.radius + player.radius && this.damageTimer >= 500) {
                     player.takeDamage(10);
-                    player.applySlow(0.2, 3000);
+                    player.applySlow(3000);
                     this.damageTimer = 0;
                 }
             }
@@ -1376,6 +1684,18 @@
                 
                 ctx.fillStyle = gradient;
                 ctx.fill();
+                
+                for (let i = 0; i < 5; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = Math.random() * this.radius;
+                    const size = Math.random() * 5 + 2;
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x + Math.cos(angle) * dist, this.y + Math.sin(angle) * dist, size, 0, Math.PI * 2);
+                    ctx.fillStyle = '#9b59b6';
+                    ctx.fill();
+                }
+                
                 ctx.globalAlpha = 1;
             }
         }
@@ -1421,8 +1741,28 @@
                 ctx.globalAlpha = 0.3 * (this.lifetime / 3000);
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = '#0f0';
+                
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0, 
+                    this.x, this.y, this.radius
+                );
+                gradient.addColorStop(0, 'rgba(0, 255, 0, 0.5)');
+                gradient.addColorStop(1, 'rgba(0, 128, 0, 0.2)');
+                
+                ctx.fillStyle = gradient;
                 ctx.fill();
+                
+                for (let i = 0; i < 3; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = Math.random() * this.radius;
+                    const size = Math.random() * 3 + 1;
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x + Math.cos(angle) * dist, this.y + Math.sin(angle) * dist, size, 0, Math.PI * 2);
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fill();
+                }
+                
                 ctx.globalAlpha = 1;
             }
         }
@@ -1676,7 +2016,6 @@
                         createParticles(this.x, this.y, 15, '#f80');
                     }
                     
-                    // Check for godslayer skin ally spawn
                     if (gameState.player.skin === 'godslayer' && Math.random() < 0.1) {
                         spawnAlly(this.x, this.y);
                     }
@@ -1695,7 +2034,12 @@
             draw(ctx) {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
+                
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, '#000');
+                
+                ctx.fillStyle = gradient;
                 ctx.fill();
                 
                 if (this.stunned) {
@@ -1778,7 +2122,7 @@
                         this.damage = 40;
                         this.color = '#f80';
                         this.name = "Dragão Ninja";
-                        this.miniDragonCooldown = 8000; 
+                        this.miniDragonCooldown = 8000;
                         break;
                     case 'oni':
                         this.health = 900;
@@ -1810,7 +2154,6 @@
                 const waveMultiplier = Math.pow(1.2, gameState.wave - 1);
                 this.health *= waveMultiplier;
                 this.maxHealth = this.health;
-                
                 
                 const side = Math.floor(Math.random() * 4);
                 switch(side) {
@@ -1958,7 +2301,7 @@
                         this.speed *= 1.5;
                         this.abilityCooldown = 3000;
                         this.fireBreathCooldown = 7000;
-                        this.miniDragonCooldown = 3000; 
+                        this.miniDragonCooldown = 3000;
                         break;
                     case 'oni':
                         this.damage *= 1.5;
@@ -1977,7 +2320,12 @@
             draw(ctx) {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
+                
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, '#000');
+                
+                ctx.fillStyle = gradient;
                 ctx.fill();
                 
                 ctx.beginPath();
@@ -2033,7 +2381,6 @@
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
                     
-                   
                     gameState.waveTimer = config.waveDuration;
                     return true;
                 }
@@ -2069,7 +2416,6 @@
                 this.minionAttackTimer = 0;
                 this.minionAttackInterval = 2000;
                 
-               
                 this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
                 this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
             }
@@ -2080,30 +2426,25 @@
                 this.spawnTimer += deltaTime;
                 this.lastAttack += deltaTime;
                 
-              
                 if (this.teleportTimer >= this.teleportInterval) {
                     this.teleport();
                     this.teleportTimer = 0;
                 }
                 
-              
                 if (this.projectileTimer >= this.projectileInterval) {
                     this.shootDarkMatter();
                     this.projectileTimer = 0;
                 }
                 
-              
                 if (this.spawnTimer >= this.spawnInterval) {
                     this.spawnEnemy();
                     this.spawnTimer = 0;
                 }
                 
-               
                 if (this.health <= this.maxHealth * 0.35 && !this.minionSpawned) {
                     this.spawnMinions();
                     this.minionSpawned = true;
                 }
-                
                 
                 if (this.minionSpawned) {
                     this.minionAttackTimer += deltaTime;
@@ -2113,7 +2454,6 @@
                     }
                 }
                 
-               
                 const dx = gameState.player.x - this.x;
                 const dy = gameState.player.y - this.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
@@ -2128,7 +2468,6 @@
                 this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
                 this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
                 
-               
                 const pool = new DarkMatterPool(this.x, this.y);
                 gameState.particles.push(pool);
                 
@@ -2237,12 +2576,10 @@
                     gameState.bossSpawned = false;
                     gameState.spawnTimer = 0;
                     
-                   
                     if (gameState.wave >= 21) {
                         unlockSkin('godslayer');
                     }
                     
-                   
                     gameState.waveTimer = config.waveDuration;
                     return true;
                 }
@@ -2252,7 +2589,6 @@
             }
 
             draw(ctx) {
-                // Corpo
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 
@@ -2266,7 +2602,6 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-              
                 ctx.beginPath();
                 ctx.moveTo(this.x - this.radius * 0.3, this.y - this.radius * 0.2);
                 ctx.lineTo(this.x - this.radius * 0.1, this.y - this.radius * 0.3);
@@ -2281,13 +2616,11 @@
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 
-                
                 ctx.beginPath();
                 ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.3, 0.1, Math.PI - 0.1);
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 3;
                 ctx.stroke();
-                
                 
                 if (this.minionSpawned) {
                     for (const minion of this.minions) {
@@ -2297,7 +2630,6 @@
                         ctx.fill();
                     }
                 }
-                
                 
                 if (this.health < this.maxHealth) {
                     const healthPercent = this.health / this.maxHealth;
@@ -2612,7 +2944,7 @@
                 },
                 {
                     name: "Fúria do Dragão",
-                    description: "Chance de ficar mais rápido e atirar mais rápido",
+                    description: "Chance de ficar mais rápido andar e atirar mais rápido",
                     apply: () => {
                         gameState.dragonFuryActive = false;
                         setInterval(() => {
@@ -2709,7 +3041,7 @@
                 },
                 {
                     name: "Chance Divina",
-                    description: "Revive uma vez com 50% de vida ao morrer",
+                    description: "Revive uma vez ao morrer",
                     apply: () => {
                         gameState.secondWind = true;
                         gameState.usedSecondWind = false;
@@ -2738,9 +3070,7 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             
-            
             simulateLoading();
-            
             
             setupEventListeners();
         }
@@ -2764,7 +3094,6 @@
         function showMainMenu() {
             document.getElementById('main-menu').style.display = 'flex';
             
-           
             updateSkinUnlocks();
         }
 
@@ -2820,7 +3149,6 @@
             
             document.getElementById('start-game').addEventListener('click', startGame);
             
-           
             document.querySelectorAll('.skin-option').forEach(skin => {
                 skin.addEventListener('click', () => {
                     if (!skin.classList.contains('locked')) {
@@ -2854,7 +3182,6 @@
                 gameState.canvas.height / 2
             );
             
-           
             gameState.player.setSkin(gameState.selectedSkin);
             
             gameState.shurikens = [];
@@ -2921,6 +3248,9 @@
             document.getElementById('powerups').style.display = 'none';
             document.getElementById('boss-health').style.display = 'none';
             document.getElementById('powerup-buttons').style.display = 'none';
+            document.getElementById('burn-effect').style.display = 'none';
+            document.getElementById('shock-effect').style.display = 'none';
+            document.getElementById('slow-effect').style.display = 'none';
             
             updateUI();
         }
@@ -2962,7 +3292,6 @@
         function updateGame(deltaTime) {
             gameState.player.update(deltaTime);
             
-           
             for (let i = gameState.allies.length - 1; i >= 0; i--) {
                 gameState.allies[i].update(deltaTime);
                 if (gameState.allies[i].health <= 0) {
@@ -2970,7 +3299,6 @@
                 }
             }
             
-           
             if (gameState.player.skin === 'godslayer') {
                 document.getElementById('ally-indicator').style.display = 'block';
                 document.getElementById('ally-indicator').textContent = `ALIADOS: ${gameState.allies.length}`;
@@ -2978,13 +3306,11 @@
                 document.getElementById('ally-indicator').style.display = 'none';
             }
             
-          
             if (gameState.level % 5 === 0 && gameState.damageMultiplier < 1 + (Math.floor(gameState.level / 5) * 0.2)) {
                 gameState.damageMultiplier = 1 + (Math.floor(gameState.level / 5) * 0.2);
                 Shuriken.prototype.damage = 11 * gameState.damageMultiplier;
             }
             
-           
             if (gameState.healthRegen && gameState.isStandingStill) {
                 const now = Date.now();
                 if (now - gameState.lastMeditationHeal >= 2000) {
@@ -2998,7 +3324,6 @@
                 }
             }
             
-           
             if (gameState.timeSlow) {
                 if (gameState.player.health <= gameState.player.maxHealth * 0.35) {
                     gameState.player.speed = gameState.player.originalSpeed * 1.5;
@@ -3006,7 +3331,6 @@
                     gameState.player.speed = gameState.player.originalSpeed;
                 }
             }
-            
             
             if (gameState.finalGambit) {
                 if (gameState.player.health <= gameState.player.maxHealth * 0.35) {
@@ -3040,7 +3364,7 @@
                     
                     if (dist < shuriken.radius + gameState.player.radius) {
                         gameState.player.takeDamage(shuriken.damage);
-                        gameState.player.applyBurn(5, 2000);
+                        gameState.player.applyBurn(3000);
                         gameState.shurikens.splice(i, 1);
                         createParticles(shuriken.x, shuriken.y, 10, '#f80');
                         continue;
@@ -3052,17 +3376,15 @@
                     const dy = shuriken.y - gameState.player.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     
-                   
                     if (shuriken.onlyPlayerCollision) {
                         if (dist < shuriken.radius + gameState.player.radius) {
                             gameState.player.takeDamage(shuriken.damage);
-                            gameState.player.applySlow(0.3, 3000);
+                            gameState.player.applySlow(3000);
                             gameState.shurikens.splice(i, 1);
                             createParticles(shuriken.x, shuriken.y, 10, '#8e44ad');
                             continue;
                         }
                     } else {
-                       
                         for (let j = gameState.enemies.length - 1; j >= 0; j--) {
                             const enemy = gameState.enemies[j];
                             const dx = shuriken.x - enemy.x;
@@ -3245,7 +3567,6 @@
                 }
             }
             
-            
             if (!gameState.bossActive) {
                 gameState.spawnTimer += deltaTime;
                 const spawnRate = Math.max(500, config.enemySpawnRate - gameState.wave * 50);
@@ -3372,11 +3693,10 @@
             gameState.waveTimer = 0;
             gameState.bossSpawned = false;
             
-            // Update max wave reached
             if (gameState.wave > gameState.maxWaveReached) {
                 gameState.maxWaveReached = gameState.wave;
+                localStorage.setItem('shurikenMasterMaxWave', gameState.maxWaveReached);
                 
-                // Unlock skins based on wave reached
                 if (gameState.maxWaveReached >= 6) {
                     unlockSkin('desolated');
                 }
@@ -3389,6 +3709,8 @@
             }
             
             config.enemySpawnRate = Math.max(500, config.enemySpawnRate - 50);
+            
+            showWaveNotification();
         }
 
         function createParticles(x, y, count, color) {
@@ -3465,53 +3787,6 @@
             }
         }
 
-        function createLightning(x1, y1, x2, y2) {
-            const segments = 10;
-            const points = [];
-            
-            points.push({ x: x1, y: y1 });
-            
-            for (let i = 1; i < segments; i++) {
-                const t = i / segments;
-                const x = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 30;
-                const y = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 30;
-                points.push({ x, y });
-            }
-            
-            points.push({ x: x2, y: y2 });
-            
-            gameState.ctx.save();
-            gameState.ctx.beginPath();
-            gameState.ctx.moveTo(points[0].x, points[0].y);
-            
-            for (let i = 1; i < points.length; i++) {
-                gameState.ctx.lineTo(points[i].x, points[i].y);
-            }
-            
-            gameState.ctx.strokeStyle = '#0ff';
-            gameState.ctx.lineWidth = 2;
-            gameState.ctx.stroke();
-            gameState.ctx.restore();
-            
-            for (let i = 0; i < 10; i++) {
-                const t = Math.random();
-                const x = x1 + (x2 - x1) * t;
-                const y = y1 + (y2 - y1) * t;
-                
-                gameState.particles.push(new Particle(
-                    x,
-                    y,
-                    '#0ff',
-                    Math.random() * 2 + 1,
-                    {
-                        x: (Math.random() - 0.5) * 3,
-                        y: (Math.random() - 0.5) * 3
-                    },
-                    Math.random() * 500 + 200
-                ));
-            }
-        }
-
         function showPowerUpSelection() {
             gameState.gamePaused = true;
             
@@ -3555,7 +3830,28 @@
             gameState.gamePaused = false;
             gameState.currentPowerups = [];
             
+            showLevelUpNotification();
             updateUI();
+        }
+
+        function showLevelUpNotification() {
+            const notification = document.getElementById('level-up-notification');
+            notification.textContent = `NÍVEL ${gameState.level} ALCANÇADO!`;
+            notification.style.opacity = '1';
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+            }, 3000);
+        }
+
+        function showWaveNotification() {
+            const notification = document.getElementById('wave-notification');
+            notification.textContent = `WAVE ${gameState.wave}`;
+            notification.style.opacity = '1';
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+            }, 3000);
         }
 
         function updateHealthText() {
@@ -3594,7 +3890,6 @@
         function render() {
             gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
             
-            // Draw grid background
             gameState.ctx.fillStyle = '#111';
             gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
             
@@ -3616,7 +3911,6 @@
                 gameState.ctx.stroke();
             }
             
-           
             gameState.particles.forEach(p => {
                 if (p instanceof ToxicCloud || p instanceof DarkMatterPool) {
                     p.draw(gameState.ctx);
@@ -3625,19 +3919,14 @@
                 }
             });
             
-           
             gameState.allies.forEach(ally => ally.draw(gameState.ctx));
             
-           
             gameState.enemies.forEach(e => e.draw(gameState.ctx));
             
-           
             gameState.bosses.forEach(b => b.draw(gameState.ctx));
-            
             
             gameState.shurikens.forEach(s => s.draw(gameState.ctx));
             
-           
             gameState.player.draw(gameState.ctx);
         }
 
