@@ -1665,155 +1665,184 @@
             }
         }
 
-        class OmegaBossMinion {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.radius = 20;
-                this.health = 300;
-                this.maxHealth = 300;
-                this.damage = 15;
-                this.color = '#5b2c6f';
-                this.borderColor = '#8e44ad';
-                this.attackCooldown = 2000;
-                this.lastAttack = 0;
-                this.projectileCooldown = 1500; // Atira a cada 1.5 segundos
-                this.lastProjectile = 0;
-                this.speed = 0; // Fica parado (alterado conforme solicitado)
-                this.targetAngle = Math.atan2(
-                    gameState.player.y - this.y,
-                    gameState.player.x - this.x
-                );
-                this.pulse = 0;
-                this.healthBarId = `minion-health-${Math.random().toString(36).substr(2, 9)}`;
-            }
+       class OmegaBossMinion {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 20;
+        this.health = 300;
+        this.maxHealth = 300;
+        this.damage = 15;
+        this.color = '#5b2c6f';
+        this.borderColor = '#8e44ad';
+        this.attackCooldown = 2000;
+        this.lastAttack = 0;
+        this.projectileCooldown = 1500;
+        this.lastProjectile = 0;
+        this.speed = 0;
+        this.targetAngle = Math.atan2(
+            gameState.player.y - this.y,
+            gameState.player.x - this.x
+        );
+        this.pulse = 0;
+        this.rotation = 0;
+        this.healthBarId = `minion-health-${Math.random().toString(36).substr(2, 9)}`;
+        this.glowIntensity = 0;
+        this.glowDirection = 1;
+    }
 
-            update(deltaTime) {
-                this.pulse += deltaTime / 100;
-                
-                const dx = gameState.player.x - this.x;
-                const dy = gameState.player.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                this.targetAngle = Math.atan2(dy, dx);
-                
-                // Fica parado (alterado conforme solicitado)
-                // Anteriormente: movia-se para perto do jogador
-                // Agora: fica parado no local onde spawnou
-                
-                this.lastAttack += deltaTime;
-                this.lastProjectile += deltaTime;
-                
-                if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
-                    gameState.player.takeDamage(this.damage);
-                    this.lastAttack = 0;
-                }
-                
-                // Atira projéteis a cada 1.5 segundos
-                if (this.lastProjectile >= this.projectileCooldown) {
-                    this.shootProjectile();
-                    this.lastProjectile = 0;
-                }
-            }
+    update(deltaTime) {
+        this.pulse += deltaTime / 100;
+        this.rotation += deltaTime / 500;
+        
+        // Efeito de pulsação
+        this.glowIntensity += 0.02 * this.glowDirection;
+        if (this.glowIntensity >= 1) this.glowDirection = -1;
+        if (this.glowIntensity <= 0.3) this.glowDirection = 1;
+        
+        const dx = gameState.player.x - this.x;
+        const dy = gameState.player.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        this.targetAngle = Math.atan2(dy, dx);
+        
+        this.lastAttack += deltaTime;
+        this.lastProjectile += deltaTime;
+        
+        if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
+            gameState.player.takeDamage(this.damage);
+            this.lastAttack = 0;
+        }
+        
+        if (this.lastProjectile >= this.projectileInterval) {
+            this.shootProjectile();
+            this.lastProjectile = 0;
+        }
+    }
+    
+    shootProjectile() {
+        const angle = Math.atan2(
+            gameState.player.y - this.y,
+            gameState.player.x - this.x
+        );
+        
+        const projectile = new DarkMatterProjectile(
+            this.x,
+            this.y,
+            angle
+        );
+        projectile.damage = 10;
+        projectile.speed = 6;
+        projectile.onlyPlayerCollision = true;
+        
+        gameState.shurikens.push(projectile);
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        
+        // Glow externo
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 1.5, 0, Math.PI * 2);
+        const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 1.5);
+        glowGradient.addColorStop(0, `rgba(142, 68, 173, ${this.glowIntensity * 0.3})`);
+        glowGradient.addColorStop(1, 'rgba(142, 68, 173, 0)');
+        ctx.fillStyle = glowGradient;
+        ctx.fill();
+        
+        // Corpo principal
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+        gradient.addColorStop(0, '#9b59b6');
+        gradient.addColorStop(0.7, '#8e44ad');
+        gradient.addColorStop(1, '#6c3483');
+        
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Padrão interno
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const innerRadius = this.radius * 0.6;
+            const outerRadius = this.radius * 0.9;
             
-            shootProjectile() {
-                const angle = Math.atan2(
-                    gameState.player.y - this.y,
-                    gameState.player.x - this.x
-                );
-                
-                const projectile = new DarkMatterProjectile(
-                    this.x,
-                    this.y,
-                    angle
-                );
-                projectile.damage = 10;
-                projectile.speed = 6;
-                projectile.onlyPlayerCollision = true;
-                
-                gameState.shurikens.push(projectile);
+            ctx.moveTo(
+                Math.cos(angle) * innerRadius,
+                Math.sin(angle) * innerRadius
+            );
+            ctx.lineTo(
+                Math.cos(angle) * outerRadius,
+                Math.sin(angle) * outerRadius
+            );
+        }
+        ctx.stroke();
+        
+        // Núcleo brilhante
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 0.4, 0, Math.PI * 2);
+        
+        const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 0.4);
+        coreGradient.addColorStop(0, '#ffffff');
+        coreGradient.addColorStop(1, '#d7bde2');
+        
+        ctx.fillStyle = coreGradient;
+        ctx.fill();
+        
+        // Partículas orbitais
+        ctx.save();
+        ctx.rotate(this.pulse);
+        for (let i = 0; i < 4; i++) {
+            const angle = (i / 4) * Math.PI * 2;
+            const orbitRadius = this.radius * 1.3;
+            
+            ctx.beginPath();
+            ctx.arc(
+                Math.cos(angle) * orbitRadius,
+                Math.sin(angle) * orbitRadius,
+                this.radius * 0.15,
+                0, Math.PI * 2
+            );
+            
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + Math.sin(this.pulse + i) * 0.3})`;
+            ctx.fill();
+        }
+        ctx.restore();
+        
+        ctx.restore();
+        
+        // Desenhar barra de vida
+        if (this.health < this.maxHealth) {
+            const healthBar = document.createElement('div');
+            healthBar.className = 'minion-health-bar';
+            healthBar.style.left = (this.x - 20) + 'px';
+            healthBar.style.top = (this.y - this.radius - 10) + 'px';
+            
+            const healthFill = document.createElement('div');
+            healthFill.className = 'minion-health-fill';
+            healthFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
+            
+            healthBar.appendChild(healthFill);
+            
+            if (!document.getElementById('minion-health-' + this.x + '-' + this.y)) {
+                healthBar.id = 'minion-health-' + this.x + '-' + this.y;
+                document.body.appendChild(healthBar);
+            } else {
+                const existingBar = document.getElementById('minion-health-' + this.x + '-' + this.y);
+                existingBar.style.left = (this.x - 20) + 'px';
+                existingBar.style.top = (this.y - this.radius - 10) + 'px';
+                existingBar.querySelector('.minion-health-fill').style.width = `${(this.health / this.maxHealth) * 100}%`;
             }
+        }
+    }
 
-            draw(ctx) {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                
-                const pulseSize = 1 + Math.sin(this.pulse) * 0.1;
-                
-                ctx.beginPath();
-                ctx.arc(0, 0, this.radius * pulseSize, 0, Math.PI * 2);
-                
-                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * pulseSize);
-                gradient.addColorStop(0, '#8e44ad');
-                gradient.addColorStop(0.7, '#5b2c6f');
-                gradient.addColorStop(1, '#2c3e50');
-                
-                ctx.fillStyle = gradient;
-                ctx.fill();
-                
-                ctx.strokeStyle = this.borderColor;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                
-                for (let i = 0; i < 4; i++) {
-                    const angle = (i / 4) * Math.PI * 2;
-                    const tentacleLength = this.radius * 1.5;
-                    const tentacleWidth = this.radius * 0.4;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(
-                        Math.cos(angle) * this.radius,
-                        Math.sin(angle) * this.radius
-                    );
-                    ctx.quadraticCurveTo(
-                        Math.cos(angle) * tentacleLength * 0.7,
-                        Math.sin(angle) * tentacleLength * 0.7,
-                        Math.cos(angle) * tentacleLength,
-                        Math.sin(angle) * tentacleLength
-                    );
-                    ctx.lineWidth = tentacleWidth;
-                    ctx.strokeStyle = '#8e44ad';
-                    ctx.stroke();
-                }
-                
-                ctx.beginPath();
-                ctx.arc(0, 0, this.radius * 0.6, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffffff';
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(0, 0, this.radius * 0.3, 0, Math.PI * 2);
-               ctx.fillStyle = '#000000';
-                ctx.fill();
-                
-                ctx.restore();
-                
-                // Desenhar barra de vida
-                 if (this.health < this.maxHealth) {
-                    const healthBar = document.createElement('div');
-                    healthBar.className = 'minion-health-bar';
-                    healthBar.style.left = (this.x - 20) + 'px';
-                    healthBar.style.top = (this.y - this.radius - 10) + 'px';
-                    
-                    const healthFill = document.createElement('div');
-                    healthFill.className = 'minion-health-fill';
-                    healthFill.style.width = `${(this.health / this.maxHealth) * 100}%`;
-                    
-                    healthBar.appendChild(healthFill);
-                    
-                    if (!document.getElementById('minion-health-' + this.x + '-' + this.y)) {
-                        healthBar.id = 'minion-health-' + this.x + '-' + this.y;
-                        document.body.appendChild(healthBar);
-                    } else {
-                        const existingBar = document.getElementById('minion-health-' + this.x + '-' + this.y);
-                        existingBar.style.left = (this.x - 20) + 'px';
-                        existingBar.style.top = (this.y - this.radius - 10) + 'px';
-                        existingBar.querySelector('.minion-health-fill').style.width = `${(this.health / this.maxHealth) * 100}%`;
-                    }
-                }
-            }
-
-
+    
             takeDamage(amount) {
                 this.health -= amount;
                 if (this.health <= 0) {
@@ -3007,278 +3036,420 @@
         }
 
         class OmegaBoss extends Enemy {
-            constructor() {
-                super(0, 0, 'strong');
-                this.type = 'omega_boss';
-                this.radius = 100;
-                this.speed = 0;
-                this.health = 7000;
-                this.maxHealth = 7000;
-                this.damage = 50;
-                this.color = '#5b2c6f';
-                this.xpValue = 5000;
-                this.attackCooldown = 4000;
-                this.lastAttack = 0;
-                this.name = "Antigo Deus Caído";
-                this.isBoss = true;
-                this.teleportTimer = 0;
-                this.teleportInterval = 2000;
-                this.projectileTimer = 0;
-                this.projectileInterval = 2500;
-                this.spawnTimer = 0;
-                this.spawnInterval = 3000;
-                this.minionSpawned = false;
-                this.minions = [];
+    constructor() {
+        super(0, 0, 'strong');
+        this.type = 'omega_boss';
+        this.radius = 100;
+        this.speed = 0;
+        this.health = 11000;
+        this.maxHealth = 11000;
+        this.damage = 50;
+        this.color = '#5b2c6f';
+        this.xpValue = 5000;
+        this.attackCooldown = 4000;
+        this.lastAttack = 0;
+        this.name = "ANTIGO DEUS CAÍDO";
+        this.isBoss = true;
+        this.teleportTimer = 0;
+        this.teleportInterval = 2000;
+        this.projectileTimer = 0;
+        this.projectileInterval = 2500;
+        this.spawnTimer = 0;
+        this.spawnInterval = 3000;
+        this.minionSpawned = false;
+        this.minions = [];
+        this.minionAttackTimer = 0;
+        this.minionAttackInterval = 2000;
+        this.rotation = 0;
+        this.pulse = 0;
+        this.glowIntensity = 0;
+        this.glowDirection = 1;
+        this.starParticles = [];
+        
+        this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
+        this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
+        
+        // Criar partículas estelares
+        for (let i = 0; i < 50; i++) {
+            this.starParticles.push({
+                angle: Math.random() * Math.PI * 2,
+                distance: Math.random() * this.radius * 2,
+                size: Math.random() * 3 + 1,
+                speed: Math.random() * 0.02 + 0.01
+            });
+        }
+    }
+
+    update(deltaTime) {
+        this.rotation += deltaTime / 1000;
+        this.pulse += deltaTime / 100;
+        
+        // Efeito de pulsação
+        this.glowIntensity += 0.01 * this.glowDirection;
+        if (this.glowIntensity >= 1) this.glowDirection = -1;
+        if (this.glowIntensity <= 0.3) this.glowDirection = 1;
+        
+        // Atualizar partículas estelares
+        for (let particle of this.starParticles) {
+            particle.angle += particle.speed;
+        }
+        
+        this.teleportTimer += deltaTime;
+        this.projectileTimer += deltaTime;
+        this.spawnTimer += deltaTime;
+        this.lastAttack += deltaTime;
+        
+        if (this.teleportTimer >= this.teleportInterval) {
+            this.teleport();
+            this.teleportTimer = 0;
+        }
+        
+        if (this.projectileTimer >= this.projectileInterval) {
+            this.shootDarkMatter();
+            this.projectileTimer = 0;
+        }
+        
+        if (this.spawnTimer >= this.spawnInterval) {
+            this.spawnEnemy();
+            this.spawnTimer = 0;
+        }
+        
+        if (this.health <= this.maxHealth * 0.4 && !this.minionSpawned) {
+            this.spawnMinions();
+            this.minionSpawned = true;
+        }
+        
+        if (this.minionSpawned) {
+            this.minionAttackTimer += deltaTime;
+            if (this.minionAttackTimer >= this.minionAttackInterval) {
+                this.minionsAttack();
                 this.minionAttackTimer = 0;
-                this.minionAttackInterval = 2000;
-                
-                this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
-                this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
             }
-
-            update(deltaTime) {
-                this.teleportTimer += deltaTime;
-                this.projectileTimer += deltaTime;
-                this.spawnTimer += deltaTime;
-                this.lastAttack += deltaTime;
+            
+            for (let i = gameState.omegaBossMinions.length - 1; i >= 0; i--) {
+                const minion = gameState.omegaBossMinions[i];
+                minion.update(deltaTime);
                 
-                if (this.teleportTimer >= this.teleportInterval) {
-                    this.teleport();
-                    this.teleportTimer = 0;
-                }
-                
-                if (this.projectileTimer >= this.projectileInterval) {
-                    this.shootDarkMatter();
-                    this.projectileTimer = 0;
-                }
-                
-                if (this.spawnTimer >= this.spawnInterval) {
-                    this.spawnEnemy();
-                    this.spawnTimer = 0;
-                }
-                
-                if (this.health <= this.maxHealth * 0.4 && !this.minionSpawned) {
-                    this.spawnMinions();
-                    this.minionSpawned = true;
-                }
-                
-                if (this.minionSpawned) {
-                    this.minionAttackTimer += deltaTime;
-                    if (this.minionAttackTimer >= this.minionAttackInterval) {
-                        this.minionsAttack();
-                        this.minionAttackTimer = 0;
-                    }
+                for (let j = gameState.shurikens.length - 1; j >= 0; j--) {
+                    const shuriken = gameState.shurikens[j];
+                    const dx = shuriken.x - minion.x;
+                    const dy = shuriken.y - minion.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
                     
-                    for (let i = gameState.omegaBossMinions.length - 1; i >= 0; i--) {
-                        const minion = gameState.omegaBossMinions[i];
-                        minion.update(deltaTime);
-                        
-                        for (let j = gameState.shurikens.length - 1; j >= 0; j--) {
-                            const shuriken = gameState.shurikens[j];
-                            const dx = shuriken.x - minion.x;
-                            const dy = shuriken.y - minion.y;
-                            const dist = Math.sqrt(dx * dx + dy * dy);
-                            
-                            if (dist < shuriken.radius + minion.radius) {
-                                const died = minion.takeDamage(shuriken.damage);
-                                if (died) {
-                                    gameState.omegaBossMinions.splice(i, 1);
-                                }
-                                if (!shuriken.piercing && !shuriken.pinkPiercing) {
-                                    gameState.shurikens.splice(j, 1);
-                                }
-                                break;
-                            }
+                    if (dist < shuriken.radius + minion.radius) {
+                        const died = minion.takeDamage(shuriken.damage);
+                        if (died) {
+                            gameState.omegaBossMinions.splice(i, 1);
                         }
+                        if (!shuriken.piercing && !shuriken.pinkPiercing) {
+                            gameState.shurikens.splice(j, 1);
+                        }
+                        break;
                     }
-                }
-                
-                const dx = gameState.player.x - this.x;
-                const dy = gameState.player.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
-                    gameState.player.takeDamage(this.damage);
-                    this.lastAttack = 0;
-                }
-            }
-
-            teleport() {
-                this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
-                this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
-                
-                const pool = new DarkMatterPool(this.x, this.y);
-                gameState.particles.push(pool);
-                
-                createParticles(this.x, this.y, 20, '#8e44ad');
-            }
-
-            shootDarkMatter() {
-                for (let i = 0; i < 70; i++) {
-                    const angle = (i / 70) * Math.PI * 2;
-                    const spawnDistance = this.radius + 30;
-                    const projectile = new DarkMatterProjectile(
-                        this.x + Math.cos(angle) * spawnDistance,
-                        this.y + Math.sin(angle) * spawnDistance,
-                        angle
-                    );
-                    projectile.onlyPlayerCollision = true;
-                    gameState.shurikens.push(projectile);
-                }
-            }
-
-            spawnEnemy() {
-                let type = 'weak';
-                const rand = Math.random();
-                
-                if (gameState.wave >= 15 && rand < 0.1) {
-                    type = 'thunder';
-                    this.spawnInterval = 6000;
-                } else if (gameState.wave >= 11 && rand < 0.2) {
-                    type = 'assassin';
-                    this.spawnInterval = 5000;
-                } else if (gameState.wave >= 9 && rand < 0.3) {
-                    type = 'tank';
-                    this.spawnInterval = 4000;
-                } else if (gameState.wave >= 7 && rand < 0.2) {
-                    type = 'elite';
-                    this.spawnInterval = 3000;
-                } else if (gameState.wave >= 4 && rand < 0.4) {
-                    type = 'strong';
-                    this.spawnInterval = 2000;
-                } else if (gameState.wave >= 2 && rand < 0.6) {
-                    type = 'medium';
-                    this.spawnInterval = 1000;
-                } else {
-                    type = 'weak';
-                    this.spawnInterval = 500;
-                }
-                
-                const angle = Math.random() * Math.PI * 2;
-                const distance = this.radius * 0.8;
-                
-                const enemy = new Enemy(
-                    this.x + Math.cos(angle) * distance,
-                    this.y + Math.sin(angle) * distance,
-                    type
-                );
-                
-                gameState.enemies.push(enemy);
-            }
-
-            spawnMinions() {
-                for (let i = 0; i < 4; i++) {
-                    const angle = (i / 4) * Math.PI * 2;
-                    const distance = 150;
-                    
-                    const minion = new OmegaBossMinion(
-                        this.x + Math.cos(angle) * distance,
-                        this.y + Math.sin(angle) * distance
-                    );
-                    
-                    gameState.omegaBossMinions.push(minion);
-                    createParticles(minion.x, minion.y, 10, '#8e44ad');
-                }
-            }
-
-            minionsAttack() {
-                for (const minion of gameState.omegaBossMinions) {
-                    const angle = Math.atan2(
-                        gameState.player.y - minion.y,
-                        gameState.player.x - minion.x
-                    );
-                    
-                    const projectile = new DarkMatterProjectile(
-                        minion.x,
-                        minion.y,
-                        angle
-                    );
-                    projectile.radius = 8;
-                    projectile.damage = 5;
-                    projectile.speed = 6;
-                    projectile.onlyPlayerCollision = true;
-                    
-                    gameState.shurikens.push(projectile);
-                }
-            }
-
-            takeDamage(amount) {
-                const damageTaken = amount * (1 - this.defense);
-                this.health -= damageTaken;
-                
-                if (this.health <= 0) {
-                    gameState.omegaBossActive = false;
-                    gameState.score += this.xpValue;
-                    gameState.xp += this.xpValue;
-                    gameState.bossSpawned = false;
-                    gameState.spawnTimer = 0;
-                    
-                    if (gameState.wave >= 20) {
-                        gameState.wave++;
-                        gameState.waveTimer = 0;
-                        gameState.bossSpawned = false;
-                        showWaveNotification();
-                    }
-                    
-                    if (gameState.wave >= 21) {
-                        unlockSkin('godslayer');
-                    }
-                    
-                    gameState.waveTimer = config.waveDuration;
-                    return true;
-                }
-                
-                this.defense = Math.min(0.7, (1 - (this.health / this.maxHealth)) * 0.7);
-                return false;
-            }
-
-            draw(ctx) {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                
-                const gradient = ctx.createRadialGradient(
-                    this.x, this.y, this.radius * 0.5,
-                    this.x, this.y, this.radius
-                );
-                gradient.addColorStop(0, '#5b2c6f');
-                gradient.addColorStop(1, '#2c3e50');
-                
-                ctx.fillStyle = gradient;
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.moveTo(this.x - this.radius * 0.3, this.y - this.radius * 0.2);
-                ctx.lineTo(this.x - this.radius * 0.1, this.y - this.radius * 0.3);
-                ctx.lineTo(this.x - this.radius * 0.2, this.y - this.radius * 0.1);
-                ctx.closePath();
-                
-                ctx.moveTo(this.x + this.radius * 0.3, this.y - this.radius * 0.2);
-                ctx.lineTo(this.x + this.radius * 0.1, this.y - this.radius * 0.3);
-                ctx.lineTo(this.x + this.radius * 0.2, this.y - this.radius * 0.1);
-                ctx.closePath();
-                
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(this.x, this.y + this.radius * 0.2, this.radius * 0.3, 0.1, Math.PI - 0.1);
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                if (this.minionSpawned) {
-                    for (const minion of gameState.omegaBossMinions) {
-                        minion.draw(ctx);
-                    }
-                }
-                
-                if (this.health < this.maxHealth) {
-                    const healthPercent = this.health / this.maxHealth;
-                    ctx.fillStyle = '#f00';
-                    ctx.fillRect(this.x - this.radius, this.y - this.radius - 15, this.radius * 2 * healthPercent, 5);
                 }
             }
         }
+        
+        const dx = gameState.player.x - this.x;
+        const dy = gameState.player.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < this.radius + gameState.player.radius && this.lastAttack >= this.attackCooldown) {
+            gameState.player.takeDamage(this.damage);
+            this.lastAttack = 0;
+        }
+    }
+
+    teleport() {
+        this.x = Math.random() * (gameState.canvas.width - this.radius * 2) + this.radius;
+        this.y = Math.random() * (gameState.canvas.height - this.radius * 2) + this.radius;
+        
+        const pool = new DarkMatterPool(this.x, this.y);
+        gameState.particles.push(pool);
+        
+        createParticles(this.x, this.y, 20, '#8e44ad');
+    }
+
+    shootDarkMatter() {
+        for (let i = 0; i < 70; i++) {
+            const angle = (i / 70) * Math.PI * 2;
+            const spawnDistance = this.radius + 30;
+            const projectile = new DarkMatterProjectile(
+                this.x + Math.cos(angle) * spawnDistance,
+                this.y + Math.sin(angle) * spawnDistance,
+                angle
+            );
+            projectile.onlyPlayerCollision = true;
+            gameState.shurikens.push(projectile);
+        }
+    }
+
+    spawnEnemy() {
+        let type = 'weak';
+        const rand = Math.random();
+        
+        if (gameState.wave >= 15 && rand < 0.1) {
+            type = 'thunder';
+            this.spawnInterval = 6000;
+        } else if (gameState.wave >= 11 && rand < 0.2) {
+            type = 'assassin';
+            this.spawnInterval = 5000;
+        } else if (gameState.wave >= 9 && rand < 0.3) {
+            type = 'tank';
+            this.spawnInterval = 4000;
+        } else if (gameState.wave >= 7 && rand < 0.2) {
+            type = 'elite';
+            this.spawnInterval = 3000;
+        } else if (gameState.wave >= 4 && rand < 0.4) {
+            type = 'strong';
+            this.spawnInterval = 2000;
+        } else if (gameState.wave >= 2 && rand < 0.6) {
+            type = 'medium';
+            this.spawnInterval = 1000;
+        } else {
+            type = 'weak';
+            this.spawnInterval = 500;
+        }
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = this.radius * 0.8;
+        
+        const enemy = new Enemy(
+            this.x + Math.cos(angle) * distance,
+            this.y + Math.sin(angle) * distance,
+            type
+        );
+        
+        gameState.enemies.push(enemy);
+    }
+
+    spawnMinions() {
+        for (let i = 0; i < 4; i++) {
+            const angle = (i / 4) * Math.PI * 2;
+            const distance = 150;
+            
+            const minion = new OmegaBossMinion(
+                this.x + Math.cos(angle) * distance,
+                this.y + Math.sin(angle) * distance
+            );
+            
+            gameState.omegaBossMinions.push(minion);
+            createParticles(minion.x, minion.y, 10, '#8e44ad');
+        }
+    }
+
+    minionsAttack() {
+        for (const minion of gameState.omegaBossMinions) {
+            const angle = Math.atan2(
+                gameState.player.y - minion.y,
+                gameState.player.x - minion.x
+            );
+            
+            const projectile = new DarkMatterProjectile(
+                minion.x,
+                minion.y,
+                angle
+            );
+            projectile.radius = 8;
+            projectile.damage = 5;
+            projectile.speed = 6;
+            projectile.onlyPlayerCollision = true;
+            
+            gameState.shurikens.push(projectile);
+        }
+    }
+
+    takeDamage(amount) {
+        const damageTaken = amount * (1 - this.defense);
+        this.health -= damageTaken;
+        
+        if (this.health <= 0) {
+            gameState.omegaBossActive = false;
+            gameState.score += this.xpValue;
+            gameState.xp += this.xpValue;
+            gameState.bossSpawned = false;
+            gameState.spawnTimer = 0;
+            
+            if (gameState.wave >= 20) {
+                gameState.wave++;
+                gameState.waveTimer = 0;
+                gameState.bossSpawned = false;
+                showWaveNotification();
+            }
+            
+            if (gameState.wave >= 21) {
+                unlockSkin('godslayer');
+            }
+            
+            gameState.waveTimer = config.waveDuration;
+            return true;
+        }
+        
+        this.defense = Math.min(0.7, (1 - (this.health / this.maxHealth)) * 0.7);
+        return false;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        
+        // Aura externa (glow cósmico)
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 2, 0, Math.PI * 2);
+        const outerGlow = ctx.createRadialGradient(0, 0, this.radius, 0, 0, this.radius * 2);
+        outerGlow.addColorStop(0, `rgba(75, 0, 130, ${this.glowIntensity * 0.4})`);
+        outerGlow.addColorStop(1, 'rgba(75, 0, 130, 0)');
+        ctx.fillStyle = outerGlow;
+        ctx.fill();
+        
+        // Anéis orbitais
+        ctx.save();
+        ctx.rotate(-this.rotation * 0.5);
+        for (let i = 0; i < 3; i++) {
+            const ringRadius = this.radius * (0.7 + i * 0.3);
+            const ringWidth = this.radius * 0.05;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(147, 112, 219, ${0.6 + Math.sin(this.pulse + i) * 0.4})`;
+            ctx.lineWidth = ringWidth;
+            ctx.stroke();
+            
+            // Detalhes nos anéis
+            ctx.beginPath();
+            for (let j = 0; j < 8; j++) {
+                const angle = (j / 8) * Math.PI * 2;
+                ctx.moveTo(
+                    Math.cos(angle) * (ringRadius - ringWidth/2),
+                    Math.sin(angle) * (ringRadius - ringWidth/2)
+                );
+                ctx.lineTo(
+                    Math.cos(angle) * (ringRadius + ringWidth/2),
+                    Math.sin(angle) * (ringRadius + ringWidth/2)
+                );
+            }
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.8})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        ctx.restore();
+        
+        // Partículas estelares orbitando
+        for (let particle of this.starParticles) {
+            ctx.beginPath();
+            ctx.arc(
+                Math.cos(particle.angle) * particle.distance,
+                Math.sin(particle.angle) * particle.distance,
+                particle.size,
+                0, Math.PI * 2
+            );
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + Math.sin(this.pulse) * 0.3})`;
+            ctx.fill();
+        }
+        
+        // Corpo principal
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        
+        const bodyGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+        bodyGradient.addColorStop(0, '#9370DB');
+        bodyGradient.addColorStop(0.5, '#6A5ACD');
+        bodyGradient.addColorStop(1, '#4B0082');
+        
+        ctx.fillStyle = bodyGradient;
+        ctx.fill();
+        
+        // Padrão de constelação na superfície
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.7})`;
+        ctx.lineWidth = 1.5;
+        
+        // Desenhar padrão de constelação
+        const points = 12;
+        for (let i = 0; i < points; i++) {
+            const angle1 = (i / points) * Math.PI * 2;
+            const angle2 = ((i + 4) % points) * Math.PI * 2 / points;
+            
+            ctx.beginPath();
+            ctx.moveTo(
+                Math.cos(angle1) * this.radius * 0.8,
+                Math.sin(angle1) * this.radius * 0.8
+            );
+            ctx.lineTo(
+                Math.cos(angle2) * this.radius * 0.8,
+                Math.sin(angle2) * this.radius * 0.8
+            );
+            ctx.stroke();
+            
+            // Pontos brilhantes
+            ctx.beginPath();
+            ctx.arc(
+                Math.cos(angle1) * this.radius * 0.8,
+                Math.sin(angle1) * this.radius * 0.8,
+                3, 0, Math.PI * 2
+            );
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+        }
+        
+        // Núcleo central brilhante
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 0.4, 0, Math.PI * 2);
+        
+        const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 0.4);
+        coreGradient.addColorStop(0, '#E6E6FA');
+        coreGradient.addColorStop(0.7, '#D8BFD8');
+        coreGradient.addColorStop(1, '#9370DB');
+        
+        ctx.fillStyle = coreGradient;
+        ctx.fill();
+        
+        // Detalhes no núcleo
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        
+        // Efeito de pulsação no núcleo
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 0.1 * (1 + Math.sin(this.pulse) * 0.2), 0, Math.PI * 2);
+        ctx.fillStyle = '#FF00FF';
+        ctx.fill();
+        
+        ctx.restore();
+        
+        // Desenhar minions se existirem
+        if (this.minionSpawned) {
+            for (const minion of gameState.omegaBossMinions) {
+                minion.draw(ctx);
+            }
+        }
+        
+        // Barra de vida
+        if (this.health < this.maxHealth) {
+            const healthPercent = this.health / this.maxHealth;
+            const barWidth = this.radius * 2;
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 25, barWidth, 8);
+            
+            ctx.fillStyle = '#9370DB';
+            ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 25, barWidth * healthPercent, 8);
+            
+            // Borda da barra de vida
+            ctx.strokeStyle = '#4B0082';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(this.x - barWidth/2, this.y - this.radius - 25, barWidth, 8);
+            
+            // Nome do boss
+            ctx.font = '16px "Press Start 2P"';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(this.name, this.x, this.y - this.radius - 30);
+        }
+    }
+}
 
         class Particle {
             constructor(x, y, color, size, velocity, lifetime) {
@@ -3830,10 +4001,10 @@
             gameState.bosses = [];
             gameState.particles = [];
             gameState.explosionHitboxes = [];
-            gameState.wave = 1;
+            gameState.wave = 19;
             gameState.waveTimer = 0;
             gameState.score = 0;
-            gameState.xp = 0;
+            gameState.xp = 1000000000;
             gameState.xpToLevel = config.xpRequirements[0];
             gameState.level = 1;
             gameState.gameOver = false;
